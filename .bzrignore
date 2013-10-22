@@ -22,3 +22,10 @@ tasklet_blocking_sockets.c
 channel.c
 microfunc.c
 time.c
+check/.deps/
+check/Makefile
+check/config.h
+check/config.log
+check/config.status
+check/stamp-h1
+
