@@ -28,4 +28,8 @@ check/config.h
 check/config.log
 check/config.status
 check/stamp-h1
+check/bcastlisten
+check/bcastlisten.c
+check/bcastlisten_vala.stamp
+check/bcastlisten-1.0.tar.gz
 
