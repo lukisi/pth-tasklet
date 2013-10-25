@@ -1,0 +1,20 @@
+# After a fresh check-out
+
+autoreconf --install
+
+# Build a debuggable binary in a new directory Debug
+
+mkdir Debug
+cd Debug
+CFLAGS='-g -O0' ../configure --disable-silent-rules --enable-logtasklet
+make
+
+# Build and install
+
+mkdir finalbuild
+cd finalbuild
+../configure --prefix=/usr
+make
+make dist
+sudo make install
+

@@ -1,32 +1,14 @@
-Per gli sviluppatori
---------------------
+libtasklet
+==========
 
-Dopo un check-out dal repository lanciare:
-  autoreconf --install
-Di seguito creare una directory Debug e dal suo interno avviare la script di configurazione
-  mkdir Debug
-  cd Debug
-  CFLAGS='-g -O0' ../configure --disable-silent-rules [--enable-logtasklet]
-Compilare
-  make
-Verificare installazione
-  make DESTDIR=$(pwd) install
-  find usr/
-Generare e verificare pacchetto distribuzione
-  make dist
-  cd ..
-  mkdir testpkg
-  cd testpkg/
-  tar xf ../Debug/tasklet-0.1.tar.gz 
-  cd tasklet-0.1/
-  CFLAGS='-g -O0' ./configure --prefix=/usr [--enable-logtasklet]
-  make
-  make DESTDIR=$(pwd) install
-  find usr/
+Tasklets are ...
 
-Per gli utenti
---------------
+The library aims to make it easy to implement spawnable class methods in
+the Vala language.
 
-Dopo aver spacchettato il tarball leggere il file INSTALL per istruzioni su come
-compilare e installare la libreria (./configure && make && sudo make install)
+It is based on GNU Pth.
 
+Features
+========
+
+...
