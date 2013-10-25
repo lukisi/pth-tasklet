@@ -11,6 +11,10 @@ AC_ARG_ENABLE([logtasklet],
     [LOGTASKLET_VALAFLAGS="-D log_tasklet"])
 AC_SUBST([LOGTASKLET_VALAFLAGS])
 
+dnl This avoids dumb '-g -O2' autoconf's default, but won't 
+dnl prevent user from setting a specific value for CFLAGS
+: ${CFLAGS=""}
+
 LT_INIT
 
 dnl Check for vala
