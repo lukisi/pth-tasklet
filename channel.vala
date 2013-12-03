@@ -18,7 +18,7 @@
 
 using Gee;
 
-namespace Ntk.Lib
+namespace Tasklets
 {
     public errordomain ChannelError {
         TIMEOUT_EXPIRED,

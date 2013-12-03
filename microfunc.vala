@@ -22,7 +22,7 @@
 
 using Gee;
 
-namespace Ntk.Lib
+namespace Tasklets
 {
     public struct struct_channel
     {

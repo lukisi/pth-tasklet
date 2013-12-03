@@ -24,7 +24,7 @@
 using Gee;
 using Wrapped.LibPth;
 
-namespace Ntk.Lib.TaskletUtils
+namespace Tasklets
 {
     /** Emulate inet_ntop and pton. In python we have:
             >>> socket.inet_ntop(socket.AF_INET,'1234')

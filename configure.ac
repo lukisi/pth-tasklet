@@ -5,11 +5,11 @@ AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([subdir-objects] [1.11])
 AM_SILENT_RULES([yes])
 
-LOGTASKLET_VALAFLAGS=
+LOGTASKLET_FLAG=
 AC_ARG_ENABLE([logtasklet],
     [AS_HELP_STRING([--enable-logtasklet], [Show current tasklet ID in logs])],
-    [LOGTASKLET_VALAFLAGS="-D log_tasklet"])
-AC_SUBST([LOGTASKLET_VALAFLAGS])
+    [LOGTASKLET_FLAG="-D log_tasklet"])
+AC_SUBST([LOGTASKLET_FLAG])
 
 dnl This avoids dumb '-g -O2' autoconf's default, but won't 
 dnl prevent user from setting a specific value for CFLAGS
@@ -25,7 +25,6 @@ AM_MAINTAINER_MODE([enable])
 PKG_CHECK_MODULES([GOBJECT], [gobject-2.0 glib-2.0])
 PKG_CHECK_MODULES([GIO], [gio-2.0])
 PKG_CHECK_MODULES([GEE], [gee-1.0])
-PKG_CHECK_MODULES([LOGGER], [logger])
 
 #
 # Check for GNU Pth library.

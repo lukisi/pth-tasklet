@@ -19,8 +19,26 @@
 using Gee;
 using Wrapped.LibPth;
 
-namespace Ntk.Lib
+namespace Tasklets
 {
+#if log_tasklet
+    private string tasklet_id()
+    {
+        return @"[$(Tasklet.self().id)] ";
+    }
+#else
+    private string tasklet_id()
+    {
+        return "";
+    }
+#endif
+    internal void log_debug(string msg) {Posix.syslog(Posix.LOG_DEBUG, tasklet_id()+msg);}
+    internal void log_info(string msg) {Posix.syslog(Posix.LOG_INFO, tasklet_id()+msg);}
+    internal void log_notice(string msg) {Posix.syslog(Posix.LOG_NOTICE, tasklet_id()+msg);}
+    internal void log_warn(string msg) {Posix.syslog(Posix.LOG_WARNING, tasklet_id()+msg);}
+    internal void log_error(string msg) {Posix.syslog(Posix.LOG_ERR, tasklet_id()+msg);}
+    internal void log_critical(string msg) {Posix.syslog(Posix.LOG_CRIT, tasklet_id()+msg);}
+
     /** A Tasklet instance represents a thread that has been spawned to execute a
       * certain function.
       * In order to spawn a thread to execute a method of an object proceed this way:
@@ -51,14 +69,14 @@ namespace Ntk.Lib
         public static void tasklet_leaves(string reason="")
         {
 #if log_tasklet_switch
-            Logger.ultradebug(@"Tasklet $(self().id) gives yield ($(reason)).");
+            Tasklets.log_debug(@"Tasklet $(self().id) gives yield ($(reason)).");
 #else
 #endif
         }
         public static void tasklet_regains(string reason="")
         {
 #if log_tasklet_switch
-            Logger.ultradebug(@"Tasklet $(self().id) gains back control ($(reason)).");
+            Tasklets.log_debug(@"Tasklet $(self().id) gains back control ($(reason)).");
 #else
 #endif
         }
@@ -258,7 +276,7 @@ namespace Ntk.Lib
             }
             catch (Error e)
             {
-                Logger.warning(@"a microfunc reported an error: $(e.message)");
+                Tasklets.log_warn(@"a microfunc reported an error: $(e.message)");
             }
             return result;
         }

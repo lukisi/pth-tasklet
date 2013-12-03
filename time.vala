@@ -18,7 +18,7 @@
 
 using Gee;
 
-namespace Ntk.Lib
+namespace Tasklets
 {
     public void ms_wait(long msec)
     {
