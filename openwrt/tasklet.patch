@@ -1,7 +1,7 @@
 diff -urN tasklet.package.orig/libs/tasklet/Makefile package/libs/tasklet/Makefile
 --- tasklet.package.orig/libs/tasklet/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ package/libs/tasklet/Makefile	2013-11-21 22:16:01.211655981 +0100
-@@ -0,0 +1,51 @@
++++ package/libs/tasklet/Makefile	2013-12-04 16:47:44.046628104 +0100
+@@ -0,0 +1,50 @@
 +
 +include $(TOPDIR)/rules.mk
 +
@@ -9,10 +9,9 @@ diff -urN tasklet.package.orig/libs/tasklet/Makefile package/libs/tasklet/Makefi
 +PKG_VERSION:=0.1
 +PKG_RELEASE:=1
 +
-+#PKG_SOURCE:=$(PKG_NAME)_$(PKG_VERSION).tar.gz
 +PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-+PKG_SOURCE_URL:=http://download.savannah.gnu.org/releases/netsukuku
-+PKG_MD5SUM:=8fda6d91fa841937541cbd5dd6c13173
++PKG_SOURCE_URL:=http://download-mirror.savannah.gnu.org/releases/netsukuku
++PKG_MD5SUM:=b7b63327abe907fb7bc56b24036a64d3
 +
 +PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 +PKG_FIXUP:=autoreconf
@@ -26,7 +25,7 @@ diff -urN tasklet.package.orig/libs/tasklet/Makefile package/libs/tasklet/Makefi
 +  CATEGORY:=Libraries
 +  TITLE:=Lightweight cooperative threads
 +  URL:=https://savannah.nongnu.org/projects/netsukuku/
-+  DEPENDS:=+glib2 +libgee +ntklogger +pthsem
++  DEPENDS:=+glib2 +libgee +pthsem
 +endef
 +
 +define Package/tasklet/description
