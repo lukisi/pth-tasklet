@@ -13,7 +13,7 @@ make
 
 mkdir finalbuild
 cd finalbuild
-../configure --prefix=/usr
+../configure --enable-logtasklet --prefix=/usr
 make
 make dist
 sudo make install
