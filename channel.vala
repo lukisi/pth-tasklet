@@ -64,8 +64,8 @@ namespace Tasklets
         {
             if (name != null) channels[name] = this;
             pendingMessages = new LinkedList<Message>();
-            taskletsWaitingForReceipt = new ArrayList<Tasklet>((EqualFunc)Tasklet.equal_func);
-            receivingTasklets = new ArrayList<Tasklet>((EqualFunc)Tasklet.equal_func);
+            taskletsWaitingForReceipt = new ArrayList<Tasklet>((EqualDataFunc)Tasklet.equal_func);
+            receivingTasklets = new ArrayList<Tasklet>((EqualDataFunc)Tasklet.equal_func);
         }
 
         public static Channel? find(string name)

@@ -13,9 +13,13 @@ libtasklet_la_SOURCES = \
 	$(NULL)
 AM_VALAFLAGS = -g -H tasklet.h --library tasklet \
 	$(LOGTASKLET_FLAG) \
-	--pkg gee-1.0 --pkg gio-2.0 \
-	--pkg posix --pkg linux --pkg posix_extras \
-	--pkg libpth --vapidir . \
+	--pkg gee-0.8 \
+	--pkg gio-2.0 \
+	--pkg posix \
+	--pkg linux \
+	--pkg posix_extras \
+	--pkg libpth \
+	--vapidir . \
 	$(NULL)
 AM_CPPFLAGS = \
 	$(GOBJECT_CFLAGS) \

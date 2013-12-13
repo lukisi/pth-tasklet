@@ -117,7 +117,7 @@ namespace Wrapped.LibPth
             get {
                 if (_threads == null)
                 {
-                    _threads = new HashMap<PseudoPointer, PthThread>((HashFunc)PseudoPointer.hash_func, (EqualFunc)PseudoPointer.equal_func);
+                    _threads = new HashMap<PseudoPointer, PthThread>((HashDataFunc)PseudoPointer.hash_func, (EqualDataFunc)PseudoPointer.equal_func);
                 }
                 return _threads;
             }

@@ -85,7 +85,7 @@ namespace Tasklets
         private static HashMap<PthThread, Tasklet> _tasklets;
         private static HashMap<PthThread, Tasklet> tasklets {
             get {
-                if (_tasklets == null) _tasklets = new HashMap<PthThread, Tasklet>((HashFunc)PthThread.hash_func, (EqualFunc)PthThread.equal_func);
+                if (_tasklets == null) _tasklets = new HashMap<PthThread, Tasklet>((HashDataFunc)PthThread.hash_func, (EqualDataFunc)PthThread.equal_func);
                 return _tasklets;
             }
         }
