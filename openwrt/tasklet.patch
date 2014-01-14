@@ -1,6 +1,6 @@
 diff -urN tasklet.package.orig/libs/tasklet/Makefile package/libs/tasklet/Makefile
 --- tasklet.package.orig/libs/tasklet/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ package/libs/tasklet/Makefile	2013-12-16 15:25:10.278667172 +0100
++++ package/libs/tasklet/Makefile	2014-01-09 17:43:12.794513242 +0100
 @@ -0,0 +1,55 @@
 +#
 +# Copyright (C) 2013 Luca Dionisi aka Lukisi
@@ -17,7 +17,7 @@ diff -urN tasklet.package.orig/libs/tasklet/Makefile package/libs/tasklet/Makefi
 +
 +PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 +PKG_SOURCE_URL:=http://download-mirror.savannah.gnu.org/releases/netsukuku
-+PKG_MD5SUM:=23d2c30fabebd610898ea1f4e4de8b06
++PKG_MD5SUM:=eae3dc3e91a6421ff18e21955e3e5cf2
 +
 +PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 +PKG_BUILD_PARALLEL:=1
