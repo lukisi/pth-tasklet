@@ -39,6 +39,17 @@ namespace Tasklets
     internal void log_error(string msg) {Posix.syslog(Posix.LOG_ERR, tasklet_id()+msg);}
     internal void log_critical(string msg) {Posix.syslog(Posix.LOG_CRIT, tasklet_id()+msg);}
 
+    public delegate void TaskletCallback(Object? obj1, Object? obj2, Object? obj3, Object? obj4);
+
+    struct struct_helper_tasklet_callback
+    {
+        public TaskletCallback y;
+        public Object? obj1;
+        public Object? obj2;
+        public Object? obj3;
+        public Object? obj4;
+    }
+
     /** A Tasklet instance represents a thread that has been spawned to execute a
       * certain function.
       * In order to spawn a thread to execute a method of an object proceed this way:
@@ -279,6 +290,59 @@ namespace Tasklets
                 Tasklets.log_warn(@"a microfunc reported an error: $(e.message)");
             }
             return result;
+        }
+
+        /** The following methods provide a way to quickly spawn a tasklet implemented
+          * by code written in a function or in a closure.
+          * BEWARE that if the code is written in a closure it will misbehave if it
+          * makes use of local variables.
+          * It provides a reasonable number of formal parameters.
+          */
+        private static void impl_tasklet_callback(TaskletCallback y,
+                                                  Object? obj1,
+                                                  Object? obj2,
+                                                  Object? obj3,
+                                                  Object? obj4)
+        {
+            y(obj1, obj2, obj3, obj4);
+        }
+
+        private static void * helper_tasklet_callback(void *v) throws Error
+        {
+            struct_helper_tasklet_callback *tuple_p =
+                    (struct_helper_tasklet_callback *)v;
+            // The caller function has to add a reference to the ref-counted instances
+            TaskletCallback y_save = tuple_p->y;
+            Object? obj1_save = tuple_p->obj1;
+            Object? obj2_save = tuple_p->obj2;
+            Object? obj3_save = tuple_p->obj1;
+            Object? obj4_save = tuple_p->obj2;
+            // schedule back to the spawner; this will probably invalidate *v and *tuple_p.
+            Tasklet.schedule_back();
+            // The actual call
+            impl_tasklet_callback(y_save,
+                                  obj1_save,
+                                  obj2_save,
+                                  obj3_save,
+                                  obj4_save);
+            // void method, return null
+            return null;
+        }
+
+        public static void tasklet_callback(TaskletCallback y,
+                                            Object? obj1=null,
+                                            Object? obj2=null,
+                                            Object? obj3=null,
+                                            Object? obj4=null)
+        {
+            struct_helper_tasklet_callback arg = 
+                    struct_helper_tasklet_callback();
+            arg.y = y;
+            arg.obj1 = obj1;
+            arg.obj2 = obj2;
+            arg.obj3 = obj3;
+            arg.obj4 = obj4;
+            Tasklet.spawn((FunctionDelegate)helper_tasklet_callback, &arg);
         }
     }
 }

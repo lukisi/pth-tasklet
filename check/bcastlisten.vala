@@ -1,10 +1,7 @@
-using Ntk.Lib;
-using Ntk.Lib.TaskletUtils;
+using Tasklets;
 
 void main(string[] args)
 {
-    LoggerInit();
-    LoggerFilePath = "/tmp/bcast.log";
     Tasklet.init(64);
     if ("bcastsend" in args[0])
     {
