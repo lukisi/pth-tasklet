@@ -117,12 +117,12 @@ namespace Tasklets
             return Value(typeof(Object));
         }
 
-        public Value recv_with_timeout(int timeout_msec) throws ChannelError
+        public Value recv_with_timeout(int64 timeout_msec) throws ChannelError
         {
             return recv_implementation(timeout_msec);
         }
 
-        private Value recv_implementation(int? timeout_msec = null) throws ChannelError
+        private Value recv_implementation(int64? timeout_msec = null) throws ChannelError
         {
             Message retval;
             Timer? tc = null;

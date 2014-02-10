@@ -20,12 +20,12 @@ using Gee;
 
 namespace Tasklets
 {
-    public void ms_wait(long msec)
+    public void ms_wait(int64 msec)
     {
-        long sec = msec / 1000;
-        long undersec = msec - sec * 1000;
-        long usec = undersec * 1000;
-        Tasklet.nap(sec, usec);
+        int64 sec = msec / (int64)1000;
+        int64 undersec = msec - sec * (int64)1000;
+        int64 usec = undersec * (int64)1000;
+        Tasklet.nap((long)sec, (long)usec);
     }
 
     /** Class for "timeouts" or "timespans"
@@ -33,19 +33,22 @@ namespace Tasklets
     public class Timer : Object
     {
         protected TimeVal exp;
-        public Timer(long msec_ttl)
+        public Timer(int64 msec_ttl)
         {
             set_time(msec_ttl);
         }
 
-        protected void set_time(long msec_ttl)
+        protected void set_time(int64 msec_ttl)
         {
             exp = TimeVal();
             exp.get_current_time();
-            exp.add(msec_ttl*1000);
+            long milli = (long)(msec_ttl % (int64)1000);
+            long seconds = (long)(msec_ttl / (int64)1000);
+            exp.add(milli*1000);
+            exp.tv_sec += seconds;
         }
 
-        protected long get_msec_ttl()
+        protected int64 get_msec_ttl()
         {
             TimeVal now = TimeVal();
             now.get_current_time();
@@ -56,7 +59,7 @@ namespace Tasklets
                 usec += 1000000;
                 sec--;
             }
-            return sec*1000 + usec/1000;
+            return (int64)sec * (int64)1000 + (int64)usec / (int64)1000;
         }
 
         public bool is_younger(Timer t)
