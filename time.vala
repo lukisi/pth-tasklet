@@ -44,6 +44,10 @@ namespace Tasklets
             exp.get_current_time();
             long milli = (long)(msec_ttl % (int64)1000);
             long seconds = (long)(msec_ttl / (int64)1000);
+            int64 check_seconds = (int64)exp.tv_sec;
+            check_seconds += (int64)seconds;
+            log_debug("Timer: going to assert timer does not exceed structure boundary.");
+            assert(check_seconds <= long.MAX);
             exp.add(milli*1000);
             exp.tv_sec += seconds;
         }
