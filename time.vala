@@ -52,7 +52,7 @@ namespace Tasklets
             exp.tv_sec += seconds;
         }
 
-        protected int64 get_msec_ttl()
+        public int64 get_msec_ttl()
         {
             TimeVal now = TimeVal();
             now.get_current_time();
