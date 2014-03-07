@@ -38,6 +38,7 @@ namespace Tasklets
             set_time(msec_ttl);
         }
 
+        private static bool boundarychecked;
         protected void set_time(int64 msec_ttl)
         {
             exp = TimeVal();
@@ -46,7 +47,11 @@ namespace Tasklets
             long seconds = (long)(msec_ttl / (int64)1000);
             int64 check_seconds = (int64)exp.tv_sec;
             check_seconds += (int64)seconds;
-            log_debug("Timer: going to assert timer does not exceed structure boundary.");
+            if (!boundarychecked)
+            {
+                log_debug("Timer: going to assert timer does not exceed structure boundary.");
+                boundarychecked = true;
+            }
             assert(check_seconds <= long.MAX);
             exp.add(milli*1000);
             exp.tv_sec += seconds;
