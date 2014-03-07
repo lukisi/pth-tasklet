@@ -32,12 +32,18 @@ namespace Tasklets
         return "";
     }
 #endif
-    internal void log_debug(string msg) {Posix.syslog(Posix.LOG_DEBUG, tasklet_id()+msg);}
-    internal void log_info(string msg) {Posix.syslog(Posix.LOG_INFO, tasklet_id()+msg);}
-    internal void log_notice(string msg) {Posix.syslog(Posix.LOG_NOTICE, tasklet_id()+msg);}
-    internal void log_warn(string msg) {Posix.syslog(Posix.LOG_WARNING, tasklet_id()+msg);}
-    internal void log_error(string msg) {Posix.syslog(Posix.LOG_ERR, tasklet_id()+msg);}
-    internal void log_critical(string msg) {Posix.syslog(Posix.LOG_CRIT, tasklet_id()+msg);}
+    internal void log_debug(string msg)     {Posix.syslog(Posix.LOG_DEBUG,
+                    tasklet_id() + " DEBUG "  + tasklet_id()+msg);}
+    internal void log_info(string msg)      {Posix.syslog(Posix.LOG_INFO,
+                    tasklet_id() + " INFO "   + tasklet_id()+msg);}
+    internal void log_notice(string msg)    {Posix.syslog(Posix.LOG_NOTICE,
+                    tasklet_id() + " INFO+ "  + tasklet_id()+msg);}
+    internal void log_warn(string msg)      {Posix.syslog(Posix.LOG_WARNING,
+                    tasklet_id() + " INFO++ " + tasklet_id()+msg);}
+    internal void log_error(string msg)     {Posix.syslog(Posix.LOG_ERR,
+                    tasklet_id() + " ERROR "  + tasklet_id()+msg);}
+    internal void log_critical(string msg)  {Posix.syslog(Posix.LOG_CRIT,
+                    tasklet_id() + " ERROR+ " + tasklet_id()+msg);}
 
     public delegate void TaskletCallback(Object? obj1, Object? obj2, Object? obj3, Object? obj4);
 
