@@ -24,7 +24,10 @@ namespace Tasklets
 #if log_tasklet
     private string tasklet_id()
     {
-        return @"[$(Tasklet.self().id)] ";
+        string ret = @"$(Tasklet.self().id)";
+        int len = ret.length;
+        for (int i = 0; i < 5-len; i++) ret = " " + ret;
+        return @"[$(ret)] ";
     }
 #else
     private string tasklet_id()
@@ -33,17 +36,17 @@ namespace Tasklets
     }
 #endif
     internal void log_debug(string msg)     {Posix.syslog(Posix.LOG_DEBUG,
-                    tasklet_id() + " DEBUG "  + msg);}
+                    tasklet_id() + "DEBUG "  + msg);}
     internal void log_info(string msg)      {Posix.syslog(Posix.LOG_INFO,
-                    tasklet_id() + " INFO "   + msg);}
+                    tasklet_id() + "INFO "   + msg);}
     internal void log_notice(string msg)    {Posix.syslog(Posix.LOG_NOTICE,
-                    tasklet_id() + " INFO+ "  + msg);}
+                    tasklet_id() + "INFO+ "  + msg);}
     internal void log_warn(string msg)      {Posix.syslog(Posix.LOG_WARNING,
-                    tasklet_id() + " INFO++ " + msg);}
+                    tasklet_id() + "INFO++ " + msg);}
     internal void log_error(string msg)     {Posix.syslog(Posix.LOG_ERR,
-                    tasklet_id() + " ERROR "  + msg);}
+                    tasklet_id() + "ERROR "  + msg);}
     internal void log_critical(string msg)  {Posix.syslog(Posix.LOG_CRIT,
-                    tasklet_id() + " ERROR+ " + msg);}
+                    tasklet_id() + "ERROR+ " + msg);}
 
     public delegate void TaskletCallback(Object? obj1, Object? obj2, Object? obj3, Object? obj4) throws Error;
 
