@@ -275,6 +275,7 @@ namespace Wrapped.LibPth
             // call blocking function with Pth support
             ssize_t result = Native.LibPth.send(fd, (void *)data, data.length, 0);
             if (result == 0) throw new IOError.CLOSED("Error trying to send to a connected socket");
+            else if (result == -1) report_error("Native.LibPth.send");
             // reset old NONBLOCK flag
             Posix.fcntl(fd, Posix.F_SETFL, flags);
             return result;
@@ -295,6 +296,7 @@ namespace Wrapped.LibPth
             uchar[] temp = new uchar[maxlen];
             ssize_t result = Native.LibPth.recv(fd, (void *)temp, maxlen, 0);
             if (result == 0) throw new IOError.CLOSED("Error trying to recv from a connected socket");
+            else if (result == -1) report_error("Native.LibPth.recv");
             data = new uchar[result];
             Posix.memcpy(data, temp, result);
             // reset old NONBLOCK flag
@@ -323,6 +325,7 @@ namespace Wrapped.LibPth
             addr.to_native(dest, destlen);
             ssize_t result = Native.LibPth.sendto(fd, (void *)data, data.length, 0, (Posix.SockAddr *)dest, destlen);
             if (result == 0) throw new IOError.FAILED(@"Error trying to send to $(address):$(port)");
+            else if (result == -1) report_error("Native.LibPth.sendto");
             // reset old NONBLOCK flag
             Posix.fcntl(fd, Posix.F_SETFL, flags);
             return result;
@@ -346,6 +349,7 @@ namespace Wrapped.LibPth
             size_t len = sizeof(Posix.SockAddrIn);
             ssize_t result = Native.LibPth.recvfrom(fd, (void *)temp, maxlen, 0, (Posix.SockAddr*)(&addr), &len);
             if (result == 0) throw new IOError.CLOSED("Error trying to recv from a udp socket");
+            else if (result == -1) report_error("Native.LibPth.recvfrom");
             rmt_ip = "";
             rmt_port = 0;
             if (addr.sin_family == SocketFamily.IPV4)
@@ -374,6 +378,31 @@ namespace Wrapped.LibPth
         public static void exit(void *exit_val)
         {
             Native.LibPth.exit(exit_val);
+        }
+
+        static void report_error(string funcname) throws Error
+        {
+            if (errno == Posix.EAGAIN)
+                throw new IOError.WOULD_BLOCK(@"$(funcname) returned EAGAIN");
+            if (errno == Posix.EWOULDBLOCK)
+                throw new IOError.WOULD_BLOCK(@"$(funcname) returned EWOULDBLOCK");
+            if (errno == Posix.EBADF)
+                throw new IOError.FAILED(@"$(funcname) returned EBADF");
+            if (errno == Posix.ECONNREFUSED)
+                throw new IOError.CONNECTION_REFUSED(@"$(funcname) returned ECONNREFUSED");
+            if (errno == Posix.EFAULT)
+                throw new IOError.FAILED(@"$(funcname) returned EFAULT");
+            if (errno == Posix.EINTR)
+                throw new IOError.FAILED(@"$(funcname) returned EINTR");
+            if (errno == Posix.EINVAL)
+                throw new IOError.INVALID_ARGUMENT(@"$(funcname) returned EINVAL");
+            if (errno == Posix.ENOMEM)
+                throw new IOError.FAILED(@"$(funcname) returned ENOMEM");
+            if (errno == Posix.ENOTCONN)
+                throw new IOError.FAILED(@"$(funcname) returned ENOTCONN");
+            if (errno == Posix.ENOTSOCK)
+                throw new IOError.FAILED(@"$(funcname) returned ENOTSOCK");
+            throw new IOError.FAILED(@"$(funcname) returned -1, errno = $(errno)");
         }
     }
 }
