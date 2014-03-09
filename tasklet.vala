@@ -186,6 +186,11 @@ namespace Tasklets
             Tasklet ret = tasklets[self_pth_thread];
             return ret;
         }
+
+        public static void declare_self(string fname)
+        {
+            Tasklets.log_debug(@"Tasklet $(self().id) declares to be doing '$(fname)'");
+        }
         
         public static void nap(long sec, long usec)
         {
@@ -235,6 +240,7 @@ namespace Tasklets
             function_params_tuple_p->params_tuple_p = params_tuple_p;
             // spawn
             Tasklet retval = new Tasklet();
+            Tasklets.log_debug(@"Spawning tasklet $(retval.id)...");
             if (stacksize > 0)
             {
                 Attribute attr = new Attribute();
@@ -253,6 +259,7 @@ namespace Tasklets
             //  (see testsuite microfunc_tester_1.vala for an example)
             schedule(retval);
             // The helper_xxx function should pass the schedule back to me afterwards.
+            Tasklets.log_debug(@"Spawned tasklet $(retval.id).");
             return retval;
         }
 
@@ -276,6 +283,7 @@ namespace Tasklets
 
         public void abort()
         {
+            Tasklets.log_debug(@"Tasklet $(id) is being aborted.");
             pth.abort();
         }
 
@@ -291,6 +299,7 @@ namespace Tasklets
             try
             {
                 tasklet_function_params_tuple *function_params_tuple_p = (tasklet_function_params_tuple *)v;
+                Tasklets.log_debug("This tasklet is starting.");
                 result = function_params_tuple_p->function(function_params_tuple_p->params_tuple_p);
                 free(v);
             }
@@ -298,6 +307,7 @@ namespace Tasklets
             {
                 Tasklets.log_warn(@"a microfunc reported an error: $(e.message)");
             }
+            Tasklets.log_debug("This tasklet is ending.");
             return result;
         }
 
