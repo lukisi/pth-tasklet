@@ -59,6 +59,57 @@ namespace Tasklets
         public Object? obj4;
     }
 
+    /** Set of methods to help monitoring the tasklets.
+      *
+      * When the tasklet system is initiated, the program can provide callbacks
+      * in order to control the type of object that maintain the data.
+      * For instance, the object Stat has data for the id of tasklet and its
+      * spawner and the funcname (as it can be reported by using the method
+      * declare_self). The program could provide a subclass that can contain
+      * the time of starting and ending of the tasklet.
+      */
+    public class Stat : Object
+    {
+        public int id;
+        public int parent;
+        public string funcname;
+        public Status status;
+    }
+
+    public enum EventType {
+        STARTED,
+        ENDED,
+        ABORTED
+    }
+
+    public enum Status {
+        SPAWNED,
+        STARTED,
+        ENDED,
+        ABORTED
+    }
+
+    public delegate Stat CreateTaskletStat();
+    public delegate void TaskletEvent(Stat tasklet, EventType event_type);
+
+    private CreateTaskletStat? create_tasklet_stat_func=null;
+    private TaskletEvent? tasklet_event_func=null;
+    private HashMap<int, Stat>? tasklet_stats=null;
+
+    public void
+    init_stats
+    (CreateTaskletStat? _create_tasklet_stat_func=null,
+     TaskletEvent? _tasklet_event_func=null)
+    {
+        create_tasklet_stat_func = () => {return new Stat();};
+        tasklet_event_func = (tasklet, event_type) => {};
+        if (create_tasklet_stat_func != null)
+            create_tasklet_stat_func = _create_tasklet_stat_func;
+        if (tasklet_event_func != null)
+            tasklet_event_func = _tasklet_event_func;
+        tasklet_stats = new HashMap<int, Stat>();
+    }
+
     /** A Tasklet instance represents a thread that has been spawned to execute a
       * certain function.
       * In order to spawn a thread to execute a method of an object proceed this way:
@@ -241,6 +292,13 @@ namespace Tasklets
             // spawn
             Tasklet retval = new Tasklet();
             Tasklets.log_debug(@"Spawning tasklet $(retval.id)...");
+            if (tasklet_stats != null)
+            {
+                tasklet_stats[retval.id] = create_tasklet_stat_func();
+                tasklet_stats[retval.id].id = retval.id;
+                tasklet_stats[retval.id].parent = self().id;
+                tasklet_stats[retval.id].status = Status.SPAWNED;
+            }
             if (stacksize > 0)
             {
                 Attribute attr = new Attribute();
@@ -284,6 +342,11 @@ namespace Tasklets
         public void abort()
         {
             Tasklets.log_debug(@"Tasklet $(id) is being aborted.");
+            if (tasklet_stats != null)
+            {
+                tasklet_stats[id].status = Status.ABORTED;
+                tasklet_event_func(tasklet_stats[id], EventType.ABORTED);
+            }
             pth.abort();
         }
 
@@ -300,6 +363,11 @@ namespace Tasklets
             {
                 tasklet_function_params_tuple *function_params_tuple_p = (tasklet_function_params_tuple *)v;
                 Tasklets.log_debug("This tasklet is starting.");
+                if (tasklet_stats != null)
+                {
+                    tasklet_stats[self().id].status = Status.STARTED;
+                    tasklet_event_func(tasklet_stats[self().id], EventType.STARTED);
+                }
                 result = function_params_tuple_p->function(function_params_tuple_p->params_tuple_p);
                 free(v);
             }
@@ -308,6 +376,11 @@ namespace Tasklets
                 Tasklets.log_warn(@"a microfunc reported an error: $(e.message)");
             }
             Tasklets.log_debug("This tasklet is ending.");
+            if (tasklet_stats != null)
+            {
+                tasklet_stats[self().id].status = Status.ENDED;
+                tasklet_event_func(tasklet_stats[self().id], EventType.ENDED);
+            }
             return result;
         }
 
