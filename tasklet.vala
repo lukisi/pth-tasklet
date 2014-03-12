@@ -74,6 +74,11 @@ namespace Tasklets
         public int parent;
         public string funcname;
         public Status status;
+
+        public static bool equal_func(Stat a, Stat b)
+        {
+            return a.id == b.id;
+        }
     }
 
     public enum EventType {
@@ -103,11 +108,20 @@ namespace Tasklets
     {
         create_tasklet_stat_func = () => {return new Stat();};
         tasklet_event_func = (tasklet, event_type) => {};
-        if (create_tasklet_stat_func != null)
+        if (_create_tasklet_stat_func != null)
             create_tasklet_stat_func = _create_tasklet_stat_func;
-        if (tasklet_event_func != null)
+        if (_tasklet_event_func != null)
             tasklet_event_func = _tasklet_event_func;
         tasklet_stats = new HashMap<int, Stat>();
+    }
+
+    public ArrayList<Stat>? get_tasklet_stats()
+    {
+        if (tasklet_stats == null) return null;
+        ArrayList<Stat> ret =
+                new ArrayList<Stat>(Stat.equal_func);
+        ret.add_all(tasklet_stats.values);
+        return ret;
     }
 
     /** A Tasklet instance represents a thread that has been spawned to execute a
