@@ -72,8 +72,9 @@ namespace Tasklets
     {
         public int id;
         public int parent;
-        public string funcname;
+        public string funcname = "";
         public Status status;
+        public string crash_message = "";
 
         public static bool equal_func(Stat a, Stat b)
         {
@@ -84,6 +85,7 @@ namespace Tasklets
     public enum EventType {
         STARTED,
         ENDED,
+        CRASHED,
         ABORTED
     }
 
@@ -91,6 +93,7 @@ namespace Tasklets
         SPAWNED,
         STARTED,
         ENDED,
+        CRASHED,
         ABORTED
     }
 
@@ -255,6 +258,11 @@ namespace Tasklets
         public static void declare_self(string fname)
         {
             Tasklets.log_debug(@"Tasklet $(self().id) declares to be doing '$(fname)'");
+            if (tasklet_stats != null)
+            {
+                tasklet_stats[self().id].funcname = fname;
+                Tasklets.log_debug("Stat updated");
+            }
         }
         
         public static void nap(long sec, long usec)
@@ -312,6 +320,7 @@ namespace Tasklets
                 tasklet_stats[retval.id].id = retval.id;
                 tasklet_stats[retval.id].parent = self().id;
                 tasklet_stats[retval.id].status = Status.SPAWNED;
+                Tasklets.log_debug("Stat created");
             }
             if (stacksize > 0)
             {
@@ -360,6 +369,7 @@ namespace Tasklets
             {
                 tasklet_stats[id].status = Status.ABORTED;
                 tasklet_event_func(tasklet_stats[id], EventType.ABORTED);
+                Tasklets.log_debug("Stat updated");
             }
             pth.abort();
         }
@@ -372,6 +382,7 @@ namespace Tasklets
 
         private static void *tasklet_marshaller(void *v)
         {
+            int self_id = self().id;
             void *result = null;
             try
             {
@@ -379,8 +390,9 @@ namespace Tasklets
                 Tasklets.log_debug("This tasklet is starting.");
                 if (tasklet_stats != null)
                 {
-                    tasklet_stats[self().id].status = Status.STARTED;
-                    tasklet_event_func(tasklet_stats[self().id], EventType.STARTED);
+                    tasklet_stats[self_id].status = Status.STARTED;
+                    tasklet_event_func(tasklet_stats[self_id], EventType.STARTED);
+                    Tasklets.log_debug("Stat updated");
                 }
                 result = function_params_tuple_p->function(function_params_tuple_p->params_tuple_p);
                 free(v);
@@ -388,12 +400,20 @@ namespace Tasklets
             catch (Error e)
             {
                 Tasklets.log_warn(@"a microfunc reported an error: $(e.message)");
+                if (tasklet_stats != null)
+                {
+                    tasklet_stats[self_id].status = Status.CRASHED;
+                    tasklet_stats[self_id].crash_message = e.message;
+                    tasklet_event_func(tasklet_stats[self_id], EventType.CRASHED);
+                    Tasklets.log_debug("Stat updated");
+                }
             }
             Tasklets.log_debug("This tasklet is ending.");
-            if (tasklet_stats != null)
+            if (tasklet_stats != null && tasklet_stats[self_id].status != Status.CRASHED)
             {
-                tasklet_stats[self().id].status = Status.ENDED;
-                tasklet_event_func(tasklet_stats[self().id], EventType.ENDED);
+                tasklet_stats[self_id].status = Status.ENDED;
+                tasklet_event_func(tasklet_stats[self_id], EventType.ENDED);
+                Tasklets.log_debug("Stat updated");
             }
             return result;
         }
