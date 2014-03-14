@@ -59,6 +59,11 @@ namespace Tasklets
 
         public int64 get_msec_ttl()
         {
+            // It's dangerous to public as API get_msec_ttl
+            //  because if it is used in order to compare 2 timers
+            //  the caller program cannot take into consideration the
+            //  time passed from the 2 calls to this method.
+            // The right way to compare 2 timers is the method is_younger.
             TimeVal now = TimeVal();
             now.get_current_time();
             long sec = exp.tv_sec - now.tv_sec;

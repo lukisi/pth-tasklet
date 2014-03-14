@@ -455,7 +455,7 @@ namespace Tasklets
             return null;
         }
 
-        public static void tasklet_callback(TaskletCallback y,
+        public static Tasklet tasklet_callback(TaskletCallback y,
                                             Object? obj1=null,
                                             Object? obj2=null,
                                             Object? obj3=null,
@@ -468,7 +468,7 @@ namespace Tasklets
             arg.obj2 = obj2;
             arg.obj3 = obj3;
             arg.obj4 = obj4;
-            Tasklet.spawn((FunctionDelegate)helper_tasklet_callback, &arg);
+            return Tasklet.spawn((FunctionDelegate)helper_tasklet_callback, &arg);
         }
     }
 }
