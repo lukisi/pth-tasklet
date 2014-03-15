@@ -267,7 +267,22 @@ namespace Tasklets
                 Tasklets.log_debug("Stat updated");
             }
         }
-        
+
+        public static void declare_finished(string fname)
+        {
+            Tasklets.log_debug(@"Tasklet $(self().id) declares has finished doing '$(fname)'");
+            if (tasklet_stats != null)
+            {
+                int self_id = self().id;
+                Stat st = tasklet_stats[self_id];
+                string toremove = " => " + fname;
+                if (st.funcname.length > toremove.length &&
+                    st.funcname.substring(st.funcname.length - toremove.length) == toremove)
+                    st.funcname = st.funcname.substring(0, st.funcname.length - toremove.length);
+                Tasklets.log_debug("Stat updated");
+            }
+        }
+
         public static void nap(long sec, long usec)
         {
             Tasklet.tasklet_leaves("with nap");
