@@ -260,7 +260,10 @@ namespace Tasklets
             Tasklets.log_debug(@"Tasklet $(self().id) declares to be doing '$(fname)'");
             if (tasklet_stats != null)
             {
-                tasklet_stats[self().id].funcname = fname;
+                int self_id = self().id;
+                Stat st = tasklet_stats[self_id];
+                if (st.funcname != "") st.funcname += " => ";
+                st.funcname += fname;
                 Tasklets.log_debug("Stat updated");
             }
         }
