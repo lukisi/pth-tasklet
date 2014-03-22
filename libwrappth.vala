@@ -59,6 +59,7 @@ namespace Wrapped.LibPth
     public class Attribute : Object
     {
         internal Native.LibPth.attr_st *attr;
+        public string? name = null;
         
         private static Attribute _DEFAULT;
         public static Attribute DEFAULT
@@ -148,6 +149,10 @@ namespace Wrapped.LibPth
         public static PthThread spawn(Attribute attr, FunctionDelegate f, void *user_data)
         {
             PthThread spawned = new PthThread();
+            if (attr.name != null)
+            {
+                Native.LibPth.attr_set(attr.attr, Native.LibPth.ATTR_NAME, attr.name);
+            }
             spawned.pth = Native.LibPth.spawn(attr.attr, f, user_data);
             threads[new PseudoPointer.with_pth_st(spawned.pth)] = spawned;
             return spawned;
@@ -155,6 +160,14 @@ namespace Wrapped.LibPth
 
         private PthThread()
         {
+        }
+
+        public string get_name()
+        {
+            Native.LibPth.attr_st *attr = Native.LibPth.attr_of(pth);
+            weak string name;
+            Native.LibPth.attr_get(attr, Native.LibPth.ATTR_NAME, out name);
+            return name;
         }
 
         public static bool equal_func(PthThread a, PthThread b) {return a.pth == b.pth;}

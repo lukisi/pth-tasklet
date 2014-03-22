@@ -300,6 +300,7 @@ namespace Tasklets
 
         private static int next_id;
         private int my_id;
+        private string? my_name = null;
         private Tasklet()
         {
             my_id = next_id++;
@@ -322,6 +323,13 @@ namespace Tasklets
             }
         }
 
+        public string name {
+            get {
+                if (my_name == null) my_name = pth.get_name();
+                return my_name;
+            }
+        }
+
         public static Tasklet spawn(FunctionDelegate function, void *params_tuple_p, bool joinable=false, int stacksize=-1)
         {
             // alloc in heap the tasklet_function_params_tuple
@@ -340,18 +348,11 @@ namespace Tasklets
                 tasklet_stats[retval.id].status = Status.SPAWNED;
                 Tasklets.log_debug("Stat created");
             }
-            if (stacksize > 0)
-            {
-                Attribute attr = new Attribute();
-                attr.set_stacksize(stacksize);
-                retval.pth = PthThread.spawn(attr, (FunctionDelegate)tasklet_marshaller, function_params_tuple_p);
-            }
-            else
-            {
-                Attribute attr = new Attribute();
-                attr.set_stacksize(1024 * _default_thread_stack_size);
-                retval.pth = PthThread.spawn(attr, (FunctionDelegate)tasklet_marshaller, function_params_tuple_p);
-            }
+            Attribute attr = new Attribute();
+            attr.name = @"id = $(retval.id)";
+            if (stacksize > 0) attr.set_stacksize(stacksize);
+            else attr.set_stacksize(1024 * _default_thread_stack_size);
+            retval.pth = PthThread.spawn(attr, (FunctionDelegate)tasklet_marshaller, function_params_tuple_p);
             if (! joinable) retval.pth.set_joinable(joinable);
             tasklets[retval.pth] = retval;
             // Immediately schedule the helper_xxx function in order to do copies and/or refcounting.

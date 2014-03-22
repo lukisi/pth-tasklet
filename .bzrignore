@@ -15,11 +15,14 @@ depcomp
 install-sh
 ltmain.sh
 missing
+test-driver
 tasklet.vapi
 libwrappth.c
 tasklet.c
 use_with_libpth_vapi.c
 libtasklet_la_vala.stamp
+testname.c
+testname
 Debug
 tasklet.h
 m4/*

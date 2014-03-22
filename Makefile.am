@@ -34,6 +34,43 @@ libtasklet_la_LIBADD = \
 	$(GOBJECT_LIBS) \
 	$(NULL)
 
+TESTS = \
+	testname \
+	$(NULL)
+
+check_PROGRAMS = \
+	testname \
+	$(NULL)
+
+testname_SOURCES = \
+	testsuites/testname/testname.vala \
+	posix_extras.vapi \
+	libpth.vapi \
+	tasklet.vapi \
+	$(NULL)
+
+testname_VALAFLAGS = \
+	--main=Tasklets.Test.NameTester.main \
+	--pkg glib-2.0 \
+	--pkg gio-2.0 \
+	--pkg gee-0.8 \
+	--pkg posix \
+	$(NULL)
+
+testname_CPPFLAGS = \
+	$(GOBJECT_CFLAGS) \
+	$(GIO_CFLAGS) \
+	$(GEE_CFLAGS) \
+	-I$(srcdir) \
+	$(NULL)
+
+testname_LDADD = \
+	$(GOBJECT_LIBS) \
+	$(GIO_LIBS) \
+	$(GEE_LIBS) \
+	$(builddir)/libtasklet.la \
+	$(NULL)
+
 vapidir = $(datadir)/vala/vapi
 dist_vapi_DATA = \
 	tasklet.vapi \

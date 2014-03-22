@@ -15,6 +15,7 @@ mkdir finalbuild
 cd finalbuild
 ../configure --enable-logtasklet --prefix=/usr
 make
+make check
 make dist
 sudo make install
 
