@@ -127,6 +127,11 @@ namespace Tasklets
         return ret;
     }
 
+    public void purge_tasklet_stats(Gee.List<int> ids)
+    {
+        foreach (int id in ids) tasklet_stats.unset(id);
+    }
+
     /** A Tasklet instance represents a thread that has been spawned to execute a
       * certain function.
       * In order to spawn a thread to execute a method of an object proceed this way:
