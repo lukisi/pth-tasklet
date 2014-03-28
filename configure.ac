@@ -16,6 +16,7 @@ dnl prevent user from setting a specific value for CFLAGS
 : ${CFLAGS=""}
 
 LT_INIT
+AM_PROG_CC_C_O
 
 dnl Check for vala
 AM_PROG_VALAC([0.10.0])

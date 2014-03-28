@@ -46,6 +46,7 @@ config.h
 config.log
 config.status
 libtool
+compile
 tasklet-0.1.tar.gz
 tasklet.pc
 finalbuild
