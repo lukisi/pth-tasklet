@@ -49,6 +49,7 @@ namespace Tasklets
                     tasklet_id() + "ERROR+ " + msg);}
 
     public delegate void TaskletCallback(Object? obj1, Object? obj2, Object? obj3, Object? obj4) throws Error;
+    public delegate bool ConditionFunc();
 
     struct struct_helper_tasklet_callback
     {
@@ -493,6 +494,26 @@ namespace Tasklets
             arg.obj3 = obj3;
             arg.obj4 = obj4;
             return Tasklet.spawn((FunctionDelegate)helper_tasklet_callback, &arg);
+        }
+
+        public static bool nap_until_condition(
+                ConditionFunc condition_func,
+                int total_msec,
+                int period_usec=2000)
+        {
+            Timer t = new Timer(total_msec);
+            bool ret = false;
+            while (! t.is_expired())
+            {
+                if (condition_func())
+                {
+                    ret = true;
+                    break;
+                }
+                Tasklet.nap(0, period_usec);
+            }
+            if (! ret) ret = condition_func();
+            return ret;
         }
     }
 }
