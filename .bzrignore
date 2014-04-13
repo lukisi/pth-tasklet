@@ -22,6 +22,7 @@ tasklet.c
 use_with_libpth_vapi.c
 libtasklet_la_vala.stamp
 testname.c
+test_commands.c
 testname
 Debug
 tasklet.h

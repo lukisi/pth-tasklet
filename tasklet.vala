@@ -133,6 +133,20 @@ namespace Tasklets
         foreach (int id in ids) tasklet_stats.unset(id);
     }
 
+    /** data for function exec_command.
+      */
+
+    char[] cmdout_buf = null;
+    char[] cmderr_buf = null;
+    const int buf_size = 20000;
+
+    public class CommandResult : Object
+    {
+        public string cmdout;
+        public string cmderr;
+        public int exit_status;
+    }
+
     /** A Tasklet instance represents a thread that has been spawned to execute a
       * certain function.
       * In order to spawn a thread to execute a method of an object proceed this way:
@@ -302,6 +316,135 @@ namespace Tasklets
             int ret = PthThread.system(command);
             Tasklet.tasklet_regains("from system");
             return ret;
+        }
+
+        /** Launch a process and block this tasklet till it ends.
+          * Returns exit status, stdout and stderr.
+          */
+        public static CommandResult exec_command(string cmdline) throws SpawnError
+        {
+            CommandResult com_ret = new CommandResult();
+            com_ret.cmdout = "";
+            com_ret.cmderr = "";
+            com_ret.exit_status = 0;
+            if (cmdout_buf == null) cmdout_buf = new char[buf_size];
+            if (cmderr_buf == null) cmderr_buf = new char[buf_size];
+            int buf_len = 200;
+            size_t cmdout_i = 0;
+            size_t cmderr_i = 0;
+            char[] buf = new char[buf_len];
+            Pid child_pid;
+            int standard_output;
+            int standard_error;
+            Process.spawn_async_with_pipes(null, cmdline.split(" "), null,
+                SpawnFlags.DO_NOT_REAP_CHILD | SpawnFlags.SEARCH_PATH,
+                null,
+                out child_pid,
+                null,
+                out standard_output,
+                out standard_error);
+            int old_standard_output_flags = Posix.fcntl(standard_output, Posix.F_GETFL, 0);
+            Posix.fcntl(standard_output, Posix.F_SETFL, old_standard_output_flags | Posix.O_NONBLOCK);
+            int old_standard_error_flags = Posix.fcntl(standard_error, Posix.F_GETFL, 0);
+            Posix.fcntl(standard_error, Posix.F_SETFL, old_standard_error_flags | Posix.O_NONBLOCK);
+            bool exited = false;
+            int waitpid_status = 0;
+            while (true)
+            {
+                bool something_read = false;
+                ssize_t s_tot = Posix.read(standard_output, (void *)buf, buf_len);
+                if (s_tot == -1)
+                {
+                    if (Posix.errno == Posix.EAGAIN)
+                    {
+                        // simply no more data from stdout
+                    }
+                    else
+                    {
+                        throw new SpawnError.READ(@"Error while pipe-reading from stdout: errno = $(Posix.errno)");
+                    }
+                }
+                else
+                {
+                    size_t tot = (size_t)s_tot;
+                    // do not exceed buffer size
+                    if (cmdout_i + tot >= buf_size) tot = buf_size - cmdout_i - 1;
+                    if (tot > 0)
+                    {
+                        something_read = true;
+                        Posix.memcpy(((char *)cmdout_buf)+cmdout_i, buf, tot);
+                        cmdout_i += tot;
+                    }
+                }
+                s_tot = Posix.read(standard_error, (void *)buf, buf_len);
+                if (s_tot == -1)
+                {
+                    if (Posix.errno == Posix.EAGAIN)
+                    {
+                        // simply no more data from stderr
+                    }
+                    else
+                    {
+                        throw new SpawnError.READ(@"Error while pipe-reading from stdout: errno = $(Posix.errno)");
+                    }
+                }
+                else
+                {
+                    size_t tot = (size_t)s_tot;
+                    // do not exceed buffer size
+                    if (cmdout_i + tot >= buf_size) tot = buf_size - cmdout_i - 1;
+                    if (tot > 0)
+                    {
+                        something_read = true;
+                        Posix.memcpy(((char *)cmderr_buf)+cmderr_i, buf, tot);
+                        cmderr_i += tot;
+                    }
+                }
+                if (!exited)
+                {
+                    Posix.pid_t ret = Posix.waitpid((Posix.pid_t)child_pid, out waitpid_status, Posix.WNOHANG);
+                    if (ret != 0) exited = true;
+                    else ms_wait(1);
+                }
+                if (exited)
+                {
+                    // perhaps more stuff to read
+                    if (!something_read) break;
+                }
+            }
+            Process.close_pid(child_pid);
+            Posix.close(standard_output);
+            Posix.close(standard_error);
+            if (waitpid_status == -1)
+            {
+                log_warn(@"ImplLinux: Posix.system failed with errno = $(Posix.errno).");
+                com_ret.exit_status = -1;
+            }
+            else if (Process.if_exited(waitpid_status))
+            {
+                com_ret.exit_status = Process.exit_status(waitpid_status);
+            }
+            else if (Process.if_signaled(waitpid_status))
+            {
+                log_info("ImplLinux: process was terminated by a signal");
+                com_ret.exit_status = (int)Process.term_sig(waitpid_status);
+            }
+            else if (Process.if_stopped(waitpid_status))
+            {
+                log_info("ImplLinux: process was _stopped_ by a signal");
+                com_ret.exit_status = (int)Process.stop_sig(waitpid_status);
+            }
+            else if (Process.core_dump(waitpid_status))
+            {
+                log_warn("ImplLinux: process core dumped.");
+                com_ret.exit_status = -1;
+            }
+            cmdout_buf[cmdout_i] = '\0';
+            cmderr_buf[cmderr_i] = '\0';
+            com_ret.cmdout = (string)cmdout_buf;
+            com_ret.cmderr = (string)cmderr_buf;
+
+            return com_ret;
         }
 
         private static int next_id;

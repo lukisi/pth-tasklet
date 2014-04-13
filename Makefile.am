@@ -36,10 +36,12 @@ libtasklet_la_LIBADD = \
 
 TESTS = \
 	testname \
+	test_commands \
 	$(NULL)
 
 check_PROGRAMS = \
 	testname \
+	test_commands \
 	$(NULL)
 
 testname_SOURCES = \
@@ -65,6 +67,35 @@ testname_CPPFLAGS = \
 	$(NULL)
 
 testname_LDADD = \
+	$(GOBJECT_LIBS) \
+	$(GIO_LIBS) \
+	$(GEE_LIBS) \
+	$(builddir)/libtasklet.la \
+	$(NULL)
+
+test_commands_SOURCES = \
+	testsuites/test_commands/test_commands.vala \
+	posix_extras.vapi \
+	libpth.vapi \
+	tasklet.vapi \
+	$(NULL)
+
+test_commands_VALAFLAGS = \
+	--main=Tasklets.Test.CommandsTester.main \
+	--pkg glib-2.0 \
+	--pkg gio-2.0 \
+	--pkg gee-0.8 \
+	--pkg posix \
+	$(NULL)
+
+test_commands_CPPFLAGS = \
+	$(GOBJECT_CFLAGS) \
+	$(GIO_CFLAGS) \
+	$(GEE_CFLAGS) \
+	-I$(srcdir) \
+	$(NULL)
+
+test_commands_LDADD = \
 	$(GOBJECT_LIBS) \
 	$(GIO_LIBS) \
 	$(GEE_LIBS) \
