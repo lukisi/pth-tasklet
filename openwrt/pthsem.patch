@@ -6,7 +6,7 @@ diff -urN pthsem.feeds.orig/packages/libs/pthsem/Makefile feeds/packages/libs/pt
    TITLE:=GNU pth extended with semaphore support
    URL:=http://www.auto.tuwien.ac.at/~mkoegler/index.php/pth
 -  DEPENDS:=@USE_EGLIBC @TARGET_x86
-+  DEPENDS:=+USE_EGLIBC
++  DEPENDS:=@USE_EGLIBC
  endef
  
  define Package/pthsem/description
