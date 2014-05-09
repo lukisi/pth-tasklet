@@ -598,20 +598,24 @@ namespace Tasklets
                                                   Object? obj3,
                                                   Object? obj4) throws Error
         {
+            Tasklets.log_debug("impl_tasklet_callback actually begins.");
             y(obj1, obj2, obj3, obj4);
         }
 
         private static void * helper_tasklet_callback(void *v) throws Error
         {
+            Tasklets.log_debug("helper_tasklet_callback begin.");
             struct_helper_tasklet_callback *tuple_p =
                     (struct_helper_tasklet_callback *)v;
             // The caller function has to add a reference to the ref-counted instances
+            Tasklets.log_debug("helper_tasklet_callback addref.");
             TaskletCallback y_save = tuple_p->y;
             Object? obj1_save = tuple_p->obj1;
             Object? obj2_save = tuple_p->obj2;
             Object? obj3_save = tuple_p->obj1;
             Object? obj4_save = tuple_p->obj2;
             // schedule back to the spawner; this will probably invalidate *v and *tuple_p.
+            Tasklets.log_debug("helper_tasklet_callback schedule_back.");
             Tasklet.schedule_back();
             // The actual call
             impl_tasklet_callback(y_save,
