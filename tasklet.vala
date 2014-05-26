@@ -255,7 +255,10 @@ namespace Tasklets
             last_scheduling_tasklet = self();
             PthThread _next = null;
             if (next != null)
+            {
                 _next = next.pth;
+                Tasklets.log_debug(@"Schedule to $(next.id).");
+            }
             Tasklet.tasklet_leaves();
             /*int retval =*/ PthThread.pth_yield(_next);
             // TODO if (retval == 0) throw new;
