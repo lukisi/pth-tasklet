@@ -5,8 +5,8 @@
  */
 
 [CCode (has_target = false)]
-public delegate void * FunctionDelegate (void* user_data) throws Error;
+public delegate void * FunctionDelegate (void* user_data);
 
 [CCode (has_target = false)]
-public delegate void FunctionDelegateV (void* user_data) throws Error;
+public delegate void FunctionDelegateV (void* user_data);
 

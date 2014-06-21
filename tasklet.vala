@@ -511,6 +511,7 @@ namespace Tasklets
             //  (see testsuite microfunc_tester_1.vala for an example)
             schedule(retval);
             // The helper_xxx function should pass the schedule back to me afterwards.
+            free(function_params_tuple_p);
             Tasklets.log_debug(@"Spawned tasklet $(retval.id).");
             return retval;
         }
@@ -566,7 +567,6 @@ namespace Tasklets
                     Tasklets.log_debug("Stat updated");
                 }
                 result = function_params_tuple_p->function(function_params_tuple_p->params_tuple_p);
-                free(v);
             }
             catch (Error e)
             {
@@ -605,7 +605,7 @@ namespace Tasklets
             y(obj1, obj2, obj3, obj4);
         }
 
-        private static void * helper_tasklet_callback(void *v) throws Error
+        private static void * helper_tasklet_callback(void *v)
         {
             Tasklets.log_debug("helper_tasklet_callback begin.");
             struct_helper_tasklet_callback *tuple_p =

@@ -1,0 +1,192 @@
+## Pth internal
+{
+   libpth-Cond-internal
+   Memcheck:Cond
+   obj:/*/libpth.so.20.*
+}
+{
+   libpth-Addr8-internal
+   Memcheck:Addr8
+   obj:/*/libpth.so.20.*
+}
+{
+   libpth-Value8-internal
+   Memcheck:Value8
+   obj:/*/libpth.so.20.*
+}
+{
+   libpth-Addr4-internal
+   Memcheck:Addr4
+   obj:/*/libpth.so.20.*
+}
+{
+   libpth-Value4-internal
+   Memcheck:Value4
+   obj:/*/libpth.so.20.*
+}
+
+## Pth system call related
+{
+   swapcontext-Value8
+   Memcheck:Value8
+   fun:swapcontext
+}
+{
+   swapcontext-Addr8
+   Memcheck:Addr8
+   fun:swapcontext
+}
+{
+   swapcontext-Value4
+   Memcheck:Value4
+   fun:swapcontext
+}
+{
+   swapcontext-Addr4
+   Memcheck:Addr4
+   fun:swapcontext
+}
+{
+   swapcontext-Cond
+   Memcheck:Cond
+   fun:swapcontext
+}
+{
+   swapcontext-Param
+   Memcheck:Param
+   rt_sigprocmask(set)
+   fun:swapcontext
+}
+{
+   swapcontext-Param
+   Memcheck:Param
+   rt_sigprocmask(oldset)
+   fun:swapcontext
+}
+
+# struct_*_destroy
+{
+   destroystructs
+   Memcheck:Value8
+   ...
+   fun:struct_*_destroy
+}
+{
+   destroystructs
+   Memcheck:Value4
+   ...
+   fun:struct_*_destroy
+}
+{
+   destroystructs
+   Memcheck:Cond
+   ...
+   fun:struct_*_destroy
+}
+
+# tasklet_marshaller
+{
+   tasklet_marshaller
+   Memcheck:Addr8
+   ...
+   fun:*_tasklet_marshaller
+}
+{
+   tasklet_marshaller
+   Memcheck:Addr4
+   ...
+   fun:*_tasklet_marshaller
+}
+{
+   tasklet_marshaller
+   Memcheck:Addr2
+   ...
+   fun:*_tasklet_marshaller
+}
+{
+   tasklet_marshaller
+   Memcheck:Addr1
+   ...
+   fun:*_tasklet_marshaller
+}
+{
+   tasklet_marshaller
+   Memcheck:Value8
+   ...
+   fun:*_tasklet_marshaller
+}
+{
+   tasklet_marshaller
+   Memcheck:Value4
+   ...
+   fun:*_tasklet_marshaller
+}
+{
+   tasklet_marshaller
+   Memcheck:Value1
+   ...
+   fun:*_tasklet_marshaller
+}
+{
+   tasklet_marshaller
+   Memcheck:Cond
+   ...
+   fun:*_tasklet_marshaller
+}
+
+{
+   unref
+   Memcheck:Cond
+   ...
+   fun:g_object_unref
+}
+{
+   unref
+   Memcheck:Value8
+   ...
+   fun:g_object_unref
+}
+
+{
+   one_time_static
+   Memcheck:Leak
+   ...
+   fun:gee_hash_map_new
+   fun:wrapped_lib_pth_pth_thread_get_threads
+}
+
+{
+   one_time_static
+   Memcheck:Leak
+   ...
+   fun:*_get_type
+}
+{
+   one_time_static
+   Memcheck:Leak
+   ...
+   fun:g_object_new
+   fun:*_construct
+}
+{
+   one_time_static
+   Memcheck:Leak
+   ...
+   fun:g_object_new
+   fun:*_construct_*
+}
+
+#{
+#   register_static
+#   Memcheck:Leak
+#   ...
+#   fun:g_type_register_static
+#}
+#{
+#   register_static
+#   Memcheck:Leak
+#   ...
+#   fun:g_type_register_fundamental
+#}
+
+

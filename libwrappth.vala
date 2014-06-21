@@ -93,6 +93,14 @@ namespace Wrapped.LibPth
             // TODO if (retval == 0) throw new;
             return bound != 0;
         }
+
+        ~Attribute()
+        {
+            if (attr != Native.LibPth.ATTR_DEFAULT)
+            {
+                Native.LibPth.attr_destroy(attr);
+            }
+        }
     }
 
     public class PseudoPointer : Object
@@ -167,6 +175,7 @@ namespace Wrapped.LibPth
             Native.LibPth.attr_st *attr = Native.LibPth.attr_of(pth);
             weak string name;
             Native.LibPth.attr_get(attr, Native.LibPth.ATTR_NAME, out name);
+            Native.LibPth.attr_destroy(attr);
             return name;
         }
 
@@ -175,17 +184,21 @@ namespace Wrapped.LibPth
 
         public void set_joinable(bool j)
         {
-            Native.LibPth.attr_set(Native.LibPth.attr_of(pth), 
+            Native.LibPth.attr_st *attr = Native.LibPth.attr_of(pth);
+            Native.LibPth.attr_set(attr, 
                                    Native.LibPth.ATTR_JOINABLE, 
                                    (int)j);
+            Native.LibPth.attr_destroy(attr);
         }
 
         public States get_state()
         {
             int state = 0;
-            Native.LibPth.attr_get(Native.LibPth.attr_of(pth), 
+            Native.LibPth.attr_st *attr = Native.LibPth.attr_of(pth);
+            Native.LibPth.attr_get(attr, 
                                    Native.LibPth.ATTR_STATE, 
                                    &state);
+            Native.LibPth.attr_destroy(attr);
             return (States)state;
         }
 
