@@ -43,14 +43,14 @@ namespace Tasklets
             public Channel ch;
             public Tasklet t;
         }
-        private static HashMap<FunctionDelegate, Record> _records;
-        private static HashMap<FunctionDelegate, Record> records {
+        private static HashMap<Spawnable, Record> _records;
+        private static HashMap<Spawnable, Record> records {
             get {
-                if (_records == null) _records = new HashMap<FunctionDelegate, Record>();
+                if (_records == null) _records = new HashMap<Spawnable, Record>();
                 return _records;
             }
         }
-        public static Channel get_channel_for_helper(FunctionDelegate f, int stacksize=-1)
+        public static Channel get_channel_for_helper(Spawnable f, int stacksize=-1)
         {
             Channel? retval = null;
             if (records.has_key(f))

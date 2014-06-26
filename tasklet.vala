@@ -21,6 +21,9 @@ using Wrapped.LibPth;
 
 namespace Tasklets
 {
+    [CCode (has_target = false)]
+    public delegate void * Spawnable (void* user_data) throws Error;
+
 #if log_tasklet
     private string tasklet_id()
     {
@@ -257,7 +260,6 @@ namespace Tasklets
             if (next != null)
             {
                 _next = next.pth;
-                Tasklets.log_debug(@"Schedule to $(next.id).");
             }
             Tasklet.tasklet_leaves();
             /*int retval =*/ PthThread.pth_yield(_next);
@@ -280,20 +282,17 @@ namespace Tasklets
 
         public static void declare_self(string fname)
         {
-            Tasklets.log_debug(@"Tasklet $(self().id) declares to be doing '$(fname)'");
             if (tasklet_stats != null)
             {
                 int self_id = self().id;
                 Stat st = tasklet_stats[self_id];
                 if (st.funcname != "") st.funcname += " => ";
                 st.funcname += fname;
-                Tasklets.log_debug("Stat updated");
             }
         }
 
         public static void declare_finished(string fname)
         {
-            Tasklets.log_debug(@"Tasklet $(self().id) declares has finished doing '$(fname)'");
             if (tasklet_stats != null)
             {
                 int self_id = self().id;
@@ -302,7 +301,6 @@ namespace Tasklets
                 if (st.funcname.length > toremove.length &&
                     st.funcname.substring(st.funcname.length - toremove.length) == toremove)
                     st.funcname = st.funcname.substring(0, st.funcname.length - toremove.length);
-                Tasklets.log_debug("Stat updated");
             }
         }
 
@@ -420,7 +418,7 @@ namespace Tasklets
             Posix.close(standard_error);
             if (waitpid_status == -1)
             {
-                log_warn(@"ImplLinux: Posix.system failed with errno = $(Posix.errno).");
+                log_warn(@"Tasklet: process '$(cmdline)' failed with errno = $(Posix.errno).");
                 com_ret.exit_status = -1;
             }
             else if (Process.if_exited(waitpid_status))
@@ -429,17 +427,17 @@ namespace Tasklets
             }
             else if (Process.if_signaled(waitpid_status))
             {
-                log_info("ImplLinux: process was terminated by a signal");
+                log_info(@"Tasklet: process '$(cmdline)' was terminated by a signal");
                 com_ret.exit_status = (int)Process.term_sig(waitpid_status);
             }
             else if (Process.if_stopped(waitpid_status))
             {
-                log_info("ImplLinux: process was _stopped_ by a signal");
+                log_info(@"Tasklet: process '$(cmdline)' was _stopped_ by a signal");
                 com_ret.exit_status = (int)Process.stop_sig(waitpid_status);
             }
             else if (Process.core_dump(waitpid_status))
             {
-                log_warn("ImplLinux: process core dumped.");
+                log_warn(@"Tasklet: process '$(cmdline)' core dumped.");
                 com_ret.exit_status = -1;
             }
             cmdout_buf[cmdout_i] = '\0';
@@ -482,7 +480,7 @@ namespace Tasklets
             }
         }
 
-        public static Tasklet spawn(FunctionDelegate function, void *params_tuple_p, bool joinable=false, int stacksize=-1)
+        public static Tasklet spawn(Spawnable function, void *params_tuple_p, bool joinable=false, int stacksize=-1)
         {
             // alloc in heap the tasklet_function_params_tuple
             tasklet_function_params_tuple *function_params_tuple_p = malloc(sizeof(tasklet_function_params_tuple));
@@ -491,20 +489,18 @@ namespace Tasklets
             function_params_tuple_p->params_tuple_p = params_tuple_p;
             // spawn
             Tasklet retval = new Tasklet();
-            Tasklets.log_debug(@"Spawning tasklet $(retval.id)...");
             if (tasklet_stats != null)
             {
                 tasklet_stats[retval.id] = create_tasklet_stat_func();
                 tasklet_stats[retval.id].id = retval.id;
                 tasklet_stats[retval.id].parent = self().id;
                 tasklet_stats[retval.id].status = Status.SPAWNED;
-                Tasklets.log_debug("Stat created");
             }
             Attribute attr = new Attribute();
             attr.name = @"id = $(retval.id)";
             if (stacksize > 0) attr.set_stacksize(stacksize);
             else attr.set_stacksize(1024 * _default_thread_stack_size);
-            retval.pth = PthThread.spawn(attr, (FunctionDelegate)tasklet_marshaller, function_params_tuple_p);
+            retval.pth = PthThread.spawn(attr, (Native.LibPth.Spawnable)tasklet_marshaller, function_params_tuple_p);
             if (! joinable) retval.pth.set_joinable(joinable);
             tasklets[retval.pth] = retval;
             // Immediately schedule the helper_xxx function in order to do copies and/or refcounting.
@@ -512,7 +508,6 @@ namespace Tasklets
             schedule(retval);
             // The helper_xxx function should pass the schedule back to me afterwards.
             free(function_params_tuple_p);
-            Tasklets.log_debug(@"Spawned tasklet $(retval.id).");
             return retval;
         }
 
@@ -536,19 +531,17 @@ namespace Tasklets
 
         public void abort()
         {
-            Tasklets.log_debug(@"Tasklet $(id) is being aborted.");
             if (tasklet_stats != null)
             {
                 tasklet_stats[id].status = Status.ABORTED;
                 tasklet_event_func(tasklet_stats[id], EventType.ABORTED);
-                Tasklets.log_debug("Stat updated");
             }
             pth.abort();
         }
 
         private struct tasklet_function_params_tuple
         {
-            public FunctionDelegate function;
+            public Spawnable function;
             public void *params_tuple_p;
         }
 
@@ -559,12 +552,10 @@ namespace Tasklets
             try
             {
                 tasklet_function_params_tuple *function_params_tuple_p = (tasklet_function_params_tuple *)v;
-                Tasklets.log_debug("This tasklet is starting.");
                 if (tasklet_stats != null)
                 {
                     tasklet_stats[self_id].status = Status.STARTED;
                     tasklet_event_func(tasklet_stats[self_id], EventType.STARTED);
-                    Tasklets.log_debug("Stat updated");
                 }
                 result = function_params_tuple_p->function(function_params_tuple_p->params_tuple_p);
             }
@@ -576,15 +567,12 @@ namespace Tasklets
                     tasklet_stats[self_id].status = Status.CRASHED;
                     tasklet_stats[self_id].crash_message = e.message;
                     tasklet_event_func(tasklet_stats[self_id], EventType.CRASHED);
-                    Tasklets.log_debug("Stat updated");
                 }
             }
-            Tasklets.log_debug("This tasklet is ending.");
             if (tasklet_stats != null && tasklet_stats[self_id].status != Status.CRASHED)
             {
                 tasklet_stats[self_id].status = Status.ENDED;
                 tasklet_event_func(tasklet_stats[self_id], EventType.ENDED);
-                Tasklets.log_debug("Stat updated");
             }
             return result;
         }
@@ -601,24 +589,20 @@ namespace Tasklets
                                                   Object? obj3,
                                                   Object? obj4) throws Error
         {
-            Tasklets.log_debug("impl_tasklet_callback actually begins.");
             y(obj1, obj2, obj3, obj4);
         }
 
-        private static void * helper_tasklet_callback(void *v)
+        private static void * helper_tasklet_callback(void *v) throws Error
         {
-            Tasklets.log_debug("helper_tasklet_callback begin.");
             struct_helper_tasklet_callback *tuple_p =
                     (struct_helper_tasklet_callback *)v;
             // The caller function has to add a reference to the ref-counted instances
-            Tasklets.log_debug("helper_tasklet_callback addref.");
             TaskletCallback y_save = tuple_p->y;
             Object? obj1_save = tuple_p->obj1;
             Object? obj2_save = tuple_p->obj2;
-            Object? obj3_save = tuple_p->obj1;
-            Object? obj4_save = tuple_p->obj2;
+            Object? obj3_save = tuple_p->obj3;
+            Object? obj4_save = tuple_p->obj4;
             // schedule back to the spawner; this will probably invalidate *v and *tuple_p.
-            Tasklets.log_debug("helper_tasklet_callback schedule_back.");
             Tasklet.schedule_back();
             // The actual call
             impl_tasklet_callback(y_save,
@@ -643,7 +627,7 @@ namespace Tasklets
             arg.obj2 = obj2;
             arg.obj3 = obj3;
             arg.obj4 = obj4;
-            return Tasklet.spawn((FunctionDelegate)helper_tasklet_callback, &arg);
+            return Tasklet.spawn((Spawnable)helper_tasklet_callback, &arg);
         }
 
         public static bool nap_until_condition(

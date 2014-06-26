@@ -154,7 +154,7 @@ namespace Wrapped.LibPth
 
         private Native.LibPth.pth_st *pth;
 
-        public static PthThread spawn(Attribute attr, FunctionDelegate f, void *user_data)
+        public static PthThread spawn(Attribute attr, Native.LibPth.Spawnable f, void *user_data)
         {
             PthThread spawned = new PthThread();
             if (attr.name != null)

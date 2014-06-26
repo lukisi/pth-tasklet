@@ -76,7 +76,7 @@ namespace Native.LibPth {
     public int attr_get(attr_st *attr, int attrname, ...);
     public int attr_destroy(attr_st *attr);
 
-    public pth_st *spawn(attr_st *attr, FunctionDelegate f, void *user_data);
+    public pth_st *spawn(attr_st *attr, Spawnable f, void *user_data);
     //public int once
     public pth_st *self();
     public int suspend(pth_st *thread);

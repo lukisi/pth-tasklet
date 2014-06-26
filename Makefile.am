@@ -114,9 +114,18 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = tasklet.pc
 EXTRA_DIST = tasklet.pc.in
 CLEANFILES = \
-	tasklet.vapi \
-	tasklet.h \
-	libtasklet_la_vala.stamp \
+	$(srcdir)/tasklet.vapi \
+	$(srcdir)/tasklet.h \
+	$(srcdir)/libtasklet_la_vala.stamp \
+	$(srcdir)/use_with_libpth_vapi.c \
+	$(srcdir)/libwrappth.c \
+	$(srcdir)/tasklet.c \
+	$(srcdir)/tasklet_blocking_sockets.c \
+	$(srcdir)/time.c \
+	$(srcdir)/microfunc.c \
+	$(srcdir)/channel.c \
+	$(srcdir)/testsuites/testname/testname.c \
+	$(srcdir)/testsuites/test_commands/test_commands.c \
 	$(NULL)
 DISTCLEANFILES = tasklet.pc
 BUILT_SOURCES = libtasklet_la_vala.stamp
