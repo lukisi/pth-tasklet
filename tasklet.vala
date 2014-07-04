@@ -80,10 +80,63 @@ namespace Tasklets
         public Status status;
         public string crash_message = "";
 
+        // logs
+        private int next_log_pos = 0;
+        private LinkedList<StatLog> mylogs;
+        private void init_logs()
+        {
+            if (mylogs == null)
+            {
+                mylogs = new LinkedList<StatLog>();
+            }
+        }
+        private void expunge_logs()
+        {
+            while (true)
+            {
+                if (mylogs.is_empty) break;
+                if (mylogs[0].tm.is_expired()) mylogs.remove_at(0);
+                else break;
+            }
+        }
+        public void log(string msg)
+        {
+            init_logs();
+            expunge_logs();
+            StatLog log = new StatLog();
+            log.pos = next_log_pos++;
+            log.msg = msg;
+            log.tm = new Timer(1000);
+            mylogs.add(log);
+        }
+        public ArrayList<string> get_logs()
+        {
+            init_logs();
+            expunge_logs();
+            ArrayList<string> ret = new ArrayList<string>();
+            if (! mylogs.is_empty)
+            {
+                // first item is the pos of first log
+                ret.add(@"$(mylogs[0].pos)");
+                foreach (StatLog log in mylogs)
+                {
+                    ret.add(log.msg);
+                }
+            }
+            return ret;
+        }
+
         public static bool equal_func(Stat a, Stat b)
         {
             return a.id == b.id;
         }
+    }
+
+    public class StatLog : Object
+    {
+        public int pos;
+        public string msg;
+        public Timer tm;
     }
 
     public enum EventType {
@@ -122,6 +175,8 @@ namespace Tasklets
         tasklet_stats = new HashMap<int, Stat>();
     }
 
+    /** get all statistics
+     */
     public ArrayList<Stat>? get_tasklet_stats()
     {
         if (tasklet_stats == null) return null;
@@ -131,9 +186,33 @@ namespace Tasklets
         return ret;
     }
 
+    /** remove some statistics
+     */
     public void purge_tasklet_stats(Gee.List<int> ids)
     {
         foreach (int id in ids) tasklet_stats.unset(id);
+    }
+
+    /** get my statistics
+     */
+    private Stat self_tasklet_stats()
+    {
+        return tasklet_stats[Tasklet.self().id];
+    }
+
+    /** use my statistics for logging
+     */
+    private void self_log(string msg)
+    {
+        self_tasklet_stats().log(msg);
+    }
+
+    /** get recent logs for a given tasklet (id)
+     */
+    private ArrayList<string> get_logs(int id)
+    {
+        Stat s = tasklet_stats[id];
+        return s.get_logs();
     }
 
     /** data for function exec_command.
@@ -302,6 +381,20 @@ namespace Tasklets
                     st.funcname.substring(st.funcname.length - toremove.length) == toremove)
                     st.funcname = st.funcname.substring(0, st.funcname.length - toremove.length);
             }
+        }
+
+        /** use my tasklet for logging
+         */
+        public static void self_log(string msg)
+        {
+            Tasklets.self_log(msg);
+        }
+
+        /** get recent logs for a given tasklet (id)
+         */
+        public static ArrayList<string> get_logs(int id)
+        {
+            return Tasklets.get_logs(id);
         }
 
         public static void nap(long sec, long usec)
