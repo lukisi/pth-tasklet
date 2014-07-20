@@ -99,7 +99,7 @@ namespace Tasklets
             pendingMessages.offer(msg);
             while (taskletsWaitingForReceipt.contains(msg.confirmReceipt))
             {
-                Tasklet.nap(0, 100);
+                Tasklet.nap(0, 10000);
             }
         }
 
