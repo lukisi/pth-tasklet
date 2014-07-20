@@ -109,11 +109,11 @@ namespace Tasklets
             log.tm = new Timer(1000);
             mylogs.add(log);
         }
-        public ArrayList<string> get_logs()
+        public LinkedList<string> get_logs()
         {
             init_logs();
             expunge_logs();
-            ArrayList<string> ret = new ArrayList<string>();
+            LinkedList<string> ret = new LinkedList<string>();
             if (! mylogs.is_empty)
             {
                 // first item is the pos of first log
@@ -207,12 +207,60 @@ namespace Tasklets
         self_tasklet_stats().log(msg);
     }
 
-    /** get recent logs for a given tasklet (id)
+    /** use my parent's statistics for logging
      */
-    private ArrayList<string> get_logs(int id)
+    private void parent_log(string msg)
     {
-        Stat s = tasklet_stats[id];
-        return s.get_logs();
+        int parent_id = self_tasklet_stats().parent;
+        if (tasklet_stats.has_key(parent_id))
+        {
+            tasklet_stats[parent_id].log(msg);
+        }
+    }
+
+    /** use my grandparent's statistics for logging
+     */
+    private void grandparent_log(string msg)
+    {
+        int parent_id = self_tasklet_stats().parent;
+        if (tasklet_stats.has_key(parent_id))
+        {
+            int grandparent_id = tasklet_stats[parent_id].parent;
+            if (tasklet_stats.has_key(grandparent_id))
+            {
+                tasklet_stats[grandparent_id].log(msg);
+            }
+        }
+    }
+
+    /** Get recent logs for a given tasklet (id)
+      * 1st item is name for tasklet 'id'.
+      *  As special case, name="STOPPED" means the tasklet is stopped and no more logs will come from there.
+      * 2nd item (if existent) is the pos of first log.
+      * Following items are logs.
+      */
+    private LinkedList<string> get_logs(int id)
+    {
+        LinkedList<string> ret = new LinkedList<string>();
+        if (! tasklet_stats.has_key(id))
+        {
+            ret.add("STOPPED");
+        }
+        else
+        {
+            Stat s = tasklet_stats[id];
+            if (s.status != Status.STARTED &&
+                s.status != Status.SPAWNED)
+            {
+                ret.add("STOPPED");
+            }
+            else
+            {
+                ret = s.get_logs();
+                ret.offer_head(s.funcname);
+            }
+        }
+        return ret;
     }
 
     /** data for function exec_command.
@@ -390,9 +438,27 @@ namespace Tasklets
             Tasklets.self_log(msg);
         }
 
-        /** get recent logs for a given tasklet (id)
+        /** use my parent's tasklet for logging
          */
-        public static ArrayList<string> get_logs(int id)
+        public static void parent_log(string msg)
+        {
+            Tasklets.parent_log(msg);
+        }
+
+        /** use my parent's tasklet for logging
+         */
+        public static void grandparent_log(string msg)
+        {
+            Tasklets.grandparent_log(msg);
+        }
+
+        /** Get recent logs for a given tasklet (id)
+          * 1st item is name for tasklet 'id'.
+          *  As special case, name="STOPPED" means the tasklet is stopped and no more logs will come from there.
+          * 2nd item (if existent) is the pos of first log.
+          * Following items are logs.
+          */
+        public static LinkedList<string> get_logs(int id)
         {
             return Tasklets.get_logs(id);
         }
