@@ -190,6 +190,7 @@ namespace Tasklets
      */
     public void purge_tasklet_stats(Gee.List<int> ids)
     {
+        if (tasklet_stats == null) return;
         foreach (int id in ids) tasklet_stats.unset(id);
     }
 
@@ -204,6 +205,7 @@ namespace Tasklets
      */
     private void self_log(string msg)
     {
+        if (tasklet_stats == null) return;
         self_tasklet_stats().log(msg);
     }
 
@@ -211,6 +213,7 @@ namespace Tasklets
      */
     private void parent_log(string msg)
     {
+        if (tasklet_stats == null) return;
         int parent_id = self_tasklet_stats().parent;
         if (tasklet_stats.has_key(parent_id))
         {
@@ -222,6 +225,7 @@ namespace Tasklets
      */
     private void grandparent_log(string msg)
     {
+        if (tasklet_stats == null) return;
         int parent_id = self_tasklet_stats().parent;
         if (tasklet_stats.has_key(parent_id))
         {
@@ -242,22 +246,25 @@ namespace Tasklets
     private LinkedList<string> get_logs(int id)
     {
         LinkedList<string> ret = new LinkedList<string>();
-        if (! tasklet_stats.has_key(id))
+        if (tasklet_stats != null)
         {
-            ret.add("STOPPED");
-        }
-        else
-        {
-            Stat s = tasklet_stats[id];
-            if (s.status != Status.STARTED &&
-                s.status != Status.SPAWNED)
+            if (! tasklet_stats.has_key(id))
             {
                 ret.add("STOPPED");
             }
             else
             {
-                ret = s.get_logs();
-                ret.offer_head(s.funcname);
+                Stat s = tasklet_stats[id];
+                if (s.status != Status.STARTED &&
+                    s.status != Status.SPAWNED)
+                {
+                    ret.add("STOPPED");
+                }
+                else
+                {
+                    ret = s.get_logs();
+                    ret.offer_head(s.funcname);
+                }
             }
         }
         return ret;
