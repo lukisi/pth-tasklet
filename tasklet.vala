@@ -784,7 +784,8 @@ namespace Tasklets
                                             Object? obj1=null,
                                             Object? obj2=null,
                                             Object? obj3=null,
-                                            Object? obj4=null)
+                                            Object? obj4=null,
+                                            bool joinable=false)
         {
             struct_helper_tasklet_callback arg = 
                     struct_helper_tasklet_callback();
@@ -793,7 +794,7 @@ namespace Tasklets
             arg.obj2 = obj2;
             arg.obj3 = obj3;
             arg.obj4 = obj4;
-            return Tasklet.spawn((Spawnable)helper_tasklet_callback, &arg);
+            return Tasklet.spawn((Spawnable)helper_tasklet_callback, &arg, joinable);
         }
 
         public static bool nap_until_condition(

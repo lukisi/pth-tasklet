@@ -215,8 +215,10 @@ namespace Wrapped.LibPth
         public static void join(PthThread joinable, void **retval)
         {
             Native.LibPth.pth_st *_joinable = joinable.pth;
-            /*int retval =*/ Native.LibPth.join(_joinable, retval);
-            // TODO if (retval == 0) throw new;
+            int ret = Native.LibPth.join(_joinable, retval);
+            if (ret != 0) return;
+            critical("Tasklet: 'join' called on non-joinable tasklet.");
+            assert_not_reached ();
         }
         
         public static void pth_yield(PthThread? next)
