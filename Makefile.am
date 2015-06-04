@@ -1,6 +1,10 @@
 NULL = 
 ACLOCAL_AMFLAGS = -I m4
-lib_LTLIBRARIES = libtasklet.la
+
+lib_LTLIBRARIES = \
+	libtasklet.la \
+	$(NULL)
+
 libtasklet_la_SOURCES = \
 	use_with_libpth_vapi.vala \
 	libwrappth.vala \
@@ -11,7 +15,10 @@ libtasklet_la_SOURCES = \
 	channel.vala \
 	config.vapi \
 	$(NULL)
-AM_VALAFLAGS = -g -H tasklet.h --library tasklet \
+
+libtasklet_la_VALAFLAGS = \
+	-H tasklet.h \
+	--library tasklet \
 	$(LOGTASKLET_FLAG) \
 	--pkg gee-0.8 \
 	--pkg gio-2.0 \
@@ -21,12 +28,15 @@ AM_VALAFLAGS = -g -H tasklet.h --library tasklet \
 	--pkg libpth \
 	--vapidir . \
 	$(NULL)
-AM_CPPFLAGS = \
+
+libtasklet_la_CPPFLAGS = \
+	-w \
 	$(GOBJECT_CFLAGS) \
 	$(PTH_CFLAGS) \
 	$(GEE_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(NULL)
+
 libtasklet_la_LIBADD = \
 	$(PTH_LIBS) \
 	$(GIO_LIBS) \

@@ -409,7 +409,6 @@ namespace Tasklets
         public static Tasklet self()
         {
             PthThread self_pth_thread = PthThread.self();
-            uint hash_self_pth_thread = PthThread.hash_func(self_pth_thread);
             Tasklet ret = tasklets[self_pth_thread];
             return ret;
         }

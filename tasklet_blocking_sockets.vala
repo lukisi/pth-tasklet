@@ -120,8 +120,20 @@ namespace Tasklets
             }
         }
 
+        public void send_new(uint8* b, size_t len) throws Error
+        {
+            while (len > 0)
+            {
+                ssize_t done = send_part_new(b, len);
+                b += done;
+                len -= done;
+            }
+        }
+
         protected abstract int send_part(uchar[] data, int maxlen) throws Error;
+        protected abstract ssize_t send_part_new(uint8* b, size_t len) throws Error;
         public abstract uchar[] recv(int maxlen) throws Error;
+        public abstract ssize_t recv_new(uint8* b, size_t maxlen) throws Error;
         public abstract void close() throws Error;
     }
 
@@ -245,6 +257,11 @@ namespace Tasklets
             return ret;
         }
 
+        protected ssize_t send_part_new(uint8* b, size_t maxlen) throws Error
+        {
+            return PthThread.socket_send_new(s, b, maxlen);
+        }
+
         public uchar[] recv(int maxlen) throws Error
         {
             uchar[] ret;
@@ -252,6 +269,11 @@ namespace Tasklets
             PthThread.socket_recv(s, out ret, maxlen);
             Tasklet.tasklet_regains("from socket_recv");
             return ret;
+        }
+
+        public ssize_t recv_new(uint8* b, size_t maxlen) throws Error
+        {
+            return PthThread.socket_recv_new(s, b, maxlen);
         }
 
         public void close() throws Error
@@ -287,6 +309,15 @@ namespace Tasklets
             uchar[] ret;
             Tasklet.tasklet_leaves("with socket_recvfrom");
             PthThread.socket_recvfrom(s, out ret, maxsize, out rmt_ip, out rmt_port);
+            Tasklet.tasklet_regains("from socket_recvfrom");
+            return ret;
+        }
+
+        public ssize_t recvfrom_new(uint8* b, size_t maxlen, out string rmt_ip, out uint16 rmt_port) throws Error
+        {
+            ssize_t ret;
+            Tasklet.tasklet_leaves("with socket_recvfrom");
+            ret = PthThread.socket_recvfrom_new(s, b, maxlen, out rmt_ip, out rmt_port);
             Tasklet.tasklet_regains("from socket_recvfrom");
             return ret;
         }
@@ -332,6 +363,15 @@ namespace Tasklets
             Tasklet.tasklet_leaves("with socket_sendtobroad");
             PthThread.socket_sendto(s, mesg, "255.255.255.255", port);
             Tasklet.tasklet_regains("from socket_sendtobroad");
+        }
+
+        public ssize_t send_new(uint8* b, size_t len) throws Error
+        {
+            ssize_t ret;
+            Tasklet.tasklet_leaves("with socket_sendtobroad");
+            ret = PthThread.socket_sendto_new(s, b, len, "255.255.255.255", port);
+            Tasklet.tasklet_regains("from socket_sendtobroad");
+            return ret;
         }
 
         public void close() throws Error

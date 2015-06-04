@@ -309,6 +309,26 @@ namespace Wrapped.LibPth
             return result;
         }
         
+        public static ssize_t socket_send_new(Socket s, uint8* b, size_t maxlen) throws Error
+        {
+            // from Socket to file_descriptor
+            int fd = s.get_fd();
+            // get current NONBLOCK flag
+            int flags;
+            if (-1 == (flags = Posix.fcntl(fd, Posix.F_GETFL, 0)))
+                flags = 0;
+            // unset NONBLOCK flag
+            int newflags = flags & (~Posix.O_NONBLOCK);
+            Posix.fcntl(fd, Posix.F_SETFL, newflags);
+            // call blocking function with Pth support
+            ssize_t result = Native.LibPth.send(fd, (void *)b, maxlen, 0);
+            if (result == 0) throw new IOError.CLOSED("Error trying to send to a connected socket");
+            else if (result == -1) report_error("Native.LibPth.send");
+            // reset old NONBLOCK flag
+            Posix.fcntl(fd, Posix.F_SETFL, flags);
+            return result;
+        }
+        
         public static ssize_t socket_recv(Socket s, out uchar[] data, int maxlen) throws Error
         {
             // from Socket to file_descriptor
@@ -327,6 +347,26 @@ namespace Wrapped.LibPth
             else if (result == -1) report_error("Native.LibPth.recv");
             data = new uchar[result];
             Posix.memcpy(data, temp, result);
+            // reset old NONBLOCK flag
+            Posix.fcntl(fd, Posix.F_SETFL, flags);
+            return result;
+        }
+        
+        public static ssize_t socket_recv_new(Socket s, uint8* b, size_t maxlen) throws Error
+        {
+            // from Socket to file_descriptor
+            int fd = s.get_fd();
+            // get current NONBLOCK flag
+            int flags;
+            if (-1 == (flags = Posix.fcntl(fd, Posix.F_GETFL, 0)))
+                flags = 0;
+            // unset NONBLOCK flag
+            int newflags = flags & (~Posix.O_NONBLOCK);
+            Posix.fcntl(fd, Posix.F_SETFL, newflags);
+            // call blocking function with Pth support
+            ssize_t result = Native.LibPth.recv(fd, (void *)b, maxlen, 0);
+            if (result == 0) throw new IOError.CLOSED("Error trying to recv from a connected socket");
+            else if (result == -1) report_error("Native.LibPth.recv");
             // reset old NONBLOCK flag
             Posix.fcntl(fd, Posix.F_SETFL, flags);
             return result;
@@ -352,6 +392,33 @@ namespace Wrapped.LibPth
             void *dest = malloc(destlen);
             addr.to_native(dest, destlen);
             ssize_t result = Native.LibPth.sendto(fd, (void *)data, data.length, 0, (Posix.SockAddr *)dest, destlen);
+            if (result == 0) throw new IOError.FAILED(@"Error trying to send to $(address):$(port)");
+            else if (result == -1) report_error("Native.LibPth.sendto");
+            // reset old NONBLOCK flag
+            Posix.fcntl(fd, Posix.F_SETFL, flags);
+            return result;
+        }
+        
+        public static ssize_t socket_sendto_new(Socket s, uint8* b, size_t len, string address, uint16 port) throws Error
+        {
+            // For a broadcast packet use "255.255.255.255" as address and
+            // use a socket 's' that has been set to broadcast.
+
+            // from Socket to file_descriptor
+            int fd = s.get_fd();
+            // get current NONBLOCK flag
+            int flags;
+            if (-1 == (flags = Posix.fcntl(fd, Posix.F_GETFL, 0)))
+                flags = 0;
+            // unset NONBLOCK flag
+            int newflags = flags & (~Posix.O_NONBLOCK);
+            Posix.fcntl(fd, Posix.F_SETFL, newflags);
+            // call blocking function with Pth support
+            SocketAddress addr = new InetSocketAddress(new InetAddress.from_string(address), port);
+            size_t destlen = addr.get_native_size();
+            void *dest = malloc(destlen);
+            addr.to_native(dest, destlen);
+            ssize_t result = Native.LibPth.sendto(fd, (void *)b, len, 0, (Posix.SockAddr *)dest, destlen);
             if (result == 0) throw new IOError.FAILED(@"Error trying to send to $(address):$(port)");
             else if (result == -1) report_error("Native.LibPth.sendto");
             // reset old NONBLOCK flag
@@ -387,6 +454,36 @@ namespace Wrapped.LibPth
             }
             data = new uchar[result];
             Posix.memcpy(data, temp, result);
+            // reset old NONBLOCK flag
+            Posix.fcntl(fd, Posix.F_SETFL, flags);
+            return result;
+        }
+        
+        public static ssize_t socket_recvfrom_new(Socket s, uint8* b, size_t maxlen, out string rmt_ip, out uint16 rmt_port) throws Error
+        {
+            // from Socket to file_descriptor
+            int fd = s.get_fd();
+            // get current NONBLOCK flag
+            int flags;
+            if (-1 == (flags = Posix.fcntl(fd, Posix.F_GETFL, 0)))
+                flags = 0;
+            // unset NONBLOCK flag
+            int newflags = flags & (~Posix.O_NONBLOCK);
+            Posix.fcntl(fd, Posix.F_SETFL, newflags);
+            // call blocking function with Pth support
+            //ssize_t recvfrom(int fd, void *buf, size_t buflen, int flags, Posix.SockAddr *addr, size_t *plen);
+            Posix.SockAddrIn addr = Posix.SockAddrIn();
+            size_t len = sizeof(Posix.SockAddrIn);
+            ssize_t result = Native.LibPth.recvfrom(fd, (void *)b, maxlen, 0, (Posix.SockAddr*)(&addr), &len);
+            if (result == 0) throw new IOError.CLOSED("Error trying to recv from a udp socket");
+            else if (result == -1) report_error("Native.LibPth.recvfrom");
+            rmt_ip = "";
+            rmt_port = 0;
+            if (addr.sin_family == SocketFamily.IPV4)
+            {
+                rmt_port = Posix.ntohs(addr.sin_port);
+                rmt_ip = Posix.inet_ntoa(addr.sin_addr);
+            }
             // reset old NONBLOCK flag
             Posix.fcntl(fd, Posix.F_SETFL, flags);
             return result;
