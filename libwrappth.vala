@@ -309,7 +309,7 @@ namespace Wrapped.LibPth
             return result;
         }
         
-        public static ssize_t socket_send_new(Socket s, uint8* b, size_t maxlen) throws Error
+        public static size_t socket_send_new(Socket s, uint8* b, size_t maxlen) throws Error
         {
             // from Socket to file_descriptor
             int fd = s.get_fd();
@@ -326,7 +326,7 @@ namespace Wrapped.LibPth
             else if (result == -1) report_error("Native.LibPth.send");
             // reset old NONBLOCK flag
             Posix.fcntl(fd, Posix.F_SETFL, flags);
-            return result;
+            return (size_t)result;
         }
         
         public static ssize_t socket_recv(Socket s, out uchar[] data, int maxlen) throws Error
@@ -352,7 +352,7 @@ namespace Wrapped.LibPth
             return result;
         }
         
-        public static ssize_t socket_recv_new(Socket s, uint8* b, size_t maxlen) throws Error
+        public static size_t socket_recv_new(Socket s, uint8* b, size_t maxlen) throws Error
         {
             // from Socket to file_descriptor
             int fd = s.get_fd();
@@ -369,7 +369,7 @@ namespace Wrapped.LibPth
             else if (result == -1) report_error("Native.LibPth.recv");
             // reset old NONBLOCK flag
             Posix.fcntl(fd, Posix.F_SETFL, flags);
-            return result;
+            return (size_t)result;
         }
         
         public static ssize_t socket_sendto(Socket s, uchar[] data, string address, uint16 port) throws Error
@@ -399,7 +399,7 @@ namespace Wrapped.LibPth
             return result;
         }
         
-        public static ssize_t socket_sendto_new(Socket s, uint8* b, size_t len, string address, uint16 port) throws Error
+        public static size_t socket_sendto_new(Socket s, uint8* b, size_t len, string address, uint16 port) throws Error
         {
             // For a broadcast packet use "255.255.255.255" as address and
             // use a socket 's' that has been set to broadcast.
@@ -423,7 +423,7 @@ namespace Wrapped.LibPth
             else if (result == -1) report_error("Native.LibPth.sendto");
             // reset old NONBLOCK flag
             Posix.fcntl(fd, Posix.F_SETFL, flags);
-            return result;
+            return (size_t)result;
         }
         
         public static ssize_t socket_recvfrom(Socket s, out uchar[] data, int maxlen, out string rmt_ip, out uint16 rmt_port) throws Error
@@ -459,7 +459,7 @@ namespace Wrapped.LibPth
             return result;
         }
         
-        public static ssize_t socket_recvfrom_new(Socket s, uint8* b, size_t maxlen, out string rmt_ip, out uint16 rmt_port) throws Error
+        public static size_t socket_recvfrom_new(Socket s, uint8* b, size_t maxlen, out string rmt_ip, out uint16 rmt_port) throws Error
         {
             // from Socket to file_descriptor
             int fd = s.get_fd();
@@ -486,7 +486,7 @@ namespace Wrapped.LibPth
             }
             // reset old NONBLOCK flag
             Posix.fcntl(fd, Posix.F_SETFL, flags);
-            return result;
+            return (size_t)result;
         }
         
         /** This terminates the current thread. Whether it's immediately
