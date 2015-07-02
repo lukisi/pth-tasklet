@@ -304,6 +304,19 @@ namespace Tasklets
                 s.bind(new InetSocketAddress(new InetAddress.from_string(bind_ip), port), true);
         }
 
+        public ServerDatagramSocket.ephemeral(out uint16 port, string? bind_ip = null, string? dev = null) throws Error
+        {
+            s = new Socket(SocketFamily.IPV4, SocketType.DATAGRAM, SocketProtocol.UDP);
+            if (dev != null)
+                sk_bindtodevice(s, dev);
+            if (bind_ip == null)
+                s.bind(new InetSocketAddress(new InetAddress.any(SocketFamily.IPV4), 0), true);
+            else
+                s.bind(new InetSocketAddress(new InetAddress.from_string(bind_ip), 0), true);
+            InetSocketAddress addr = (InetSocketAddress)s.get_local_address();
+            port = addr.get_port();
+        }
+
         public uchar[] recvfrom(int maxsize, out string rmt_ip, out uint16 rmt_port) throws Error
         {
             uchar[] ret;
