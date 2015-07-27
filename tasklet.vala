@@ -484,6 +484,30 @@ namespace Tasklets
             return ret;
         }
 
+        public static size_t read(int fd, void* b, size_t nbytes) throws Error
+        {
+            Tasklet.tasklet_leaves("with read");
+            size_t ret = 0; // valac's bug: this initialization should not be needed
+            try {
+                ret = PthThread.read(fd, b, nbytes);
+            } finally {
+                Tasklet.tasklet_regains("from read");
+            }
+            return ret;
+        }
+
+        public static size_t write(int fd, void* b, size_t nbytes) throws Error
+        {
+            Tasklet.tasklet_leaves("with write");
+            size_t ret = 0; // valac's bug: this initialization should not be needed
+            try {
+                ret = PthThread.write(fd, b, nbytes);
+            } finally {
+                Tasklet.tasklet_regains("from write");
+            }
+            return ret;
+        }
+
         /** Launch a process and block this tasklet till it ends.
           * Returns exit status, stdout and stderr.
           */

@@ -488,7 +488,23 @@ namespace Wrapped.LibPth
             Posix.fcntl(fd, Posix.F_SETFL, flags);
             return (size_t)result;
         }
-        
+
+        public static size_t read(int fd, void* b, size_t nbytes) throws Error
+        {
+            // call blocking function with Pth support
+            ssize_t result = Native.LibPth.read(fd, b, nbytes);
+            if (result == -1) report_error("Native.LibPth.read");
+            return (size_t)result;
+        }
+
+        public static size_t write(int fd, void* b, size_t nbytes) throws Error
+        {
+            // call blocking function with Pth support
+            ssize_t result = Native.LibPth.write(fd, b, nbytes);
+            if (result == -1) report_error("Native.LibPth.write");
+            return (size_t)result;
+        }
+
         /** This terminates the current thread. Whether it's immediately
           * removed from the system or inserted into the dead queue of the
           * scheduler depends on its join type which was specified at
@@ -505,6 +521,7 @@ namespace Wrapped.LibPth
             Native.LibPth.exit(exit_val);
         }
 
+        [NoReturn]
         static void report_error(string funcname) throws Error
         {
             if (errno == Posix.EAGAIN)
