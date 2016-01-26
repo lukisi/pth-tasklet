@@ -16,9 +16,9 @@
  *  along with Netsukuku.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-using Tasklets;
+using PthTasklet;
 
-namespace Tasklets.Test
+namespace PthTasklet.Test
 {
     string logger;
     const bool output = false;

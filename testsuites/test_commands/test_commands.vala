@@ -16,9 +16,9 @@
  *  along with Netsukuku.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-using Tasklets;
+using PthTasklet;
 
-namespace Tasklets.Test
+namespace PthTasklet.Test
 {
     string logger;
     const bool output = false;
@@ -75,10 +75,10 @@ namespace Tasklets.Test
             });
             Tasklet task1 = Tasklet.tasklet_callback(() => {
                 // exec a long command
-                CommandResult res = Tasklet.exec_command("sleep 0.3");
+                Tasklet.exec_command("sleep 0.3");
                 print_out("\n");
             });
-            Tasklet task2 = Tasklet.tasklet_callback(() => {
+            Tasklet.tasklet_callback(() => {
                 // exec a long command
                 CommandResult res = Tasklet.exec_command("ip a");
                 print_out(res.cmdout);

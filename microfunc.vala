@@ -1,6 +1,6 @@
 /*
  *  This file is part of Netsukuku.
- *  (c) Copyright 2011 Luca Dionisi aka lukisi <luca.dionisi@gmail.com>
+ *  (c) Copyright 2011-2016 Luca Dionisi aka lukisi <luca.dionisi@gmail.com>
  *
  *  Netsukuku is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 using Gee;
 
-namespace Tasklets
+namespace PthTasklet
 {
     public struct struct_channel
     {

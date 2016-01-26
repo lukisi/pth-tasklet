@@ -4,9 +4,9 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: @PACKAGE_NAME@
-Description: Tasklet library
+Description: GNU/Pth-based tasklet library - tasklet-system implementation
 Version: @VERSION@
 Requires.private: gee-0.8
-Libs: -L${libdir} -ltasklet
+Libs: -L${libdir} -lpth-tasklet
 Cflags: -I${includedir}
 

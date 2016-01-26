@@ -4,6 +4,7 @@ Makefile.in
 .deps
 .libs
 *.stamp
+*.stamp-t
 stamp-h1
 aclocal.m4
 autom4te.cache
@@ -16,16 +17,16 @@ install-sh
 ltmain.sh
 missing
 test-driver
-tasklet.vapi
+pth-tasklet.vapi
 libwrappth.c
 tasklet.c
+tasklet_system_tasklet.c
 use_with_libpth_vapi.c
-libtasklet_la_vala.stamp
 testname.c
 test_commands.c
 testname
 Debug
-tasklet.h
+pth-tasklet.h
 m4/*
 testpkg
 tasklet_blocking_sockets.c

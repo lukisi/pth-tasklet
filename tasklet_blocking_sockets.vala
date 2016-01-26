@@ -1,6 +1,6 @@
 /*
  *  This file is part of Netsukuku.
- *  (c) Copyright 2011 Luca Dionisi aka lukisi <luca.dionisi@gmail.com>
+ *  (c) Copyright 2011-2016 Luca Dionisi aka lukisi <luca.dionisi@gmail.com>
  *
  *  Netsukuku is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 using Gee;
 using Wrapped.LibPth;
 
-namespace Tasklets
+namespace PthTasklet
 {
     /** Emulate inet_ntop and pton. In python we have:
             >>> socket.inet_ntop(socket.AF_INET,'1234')
@@ -162,9 +162,7 @@ namespace Tasklets
           */
         public IConnectedStreamSocket accept() throws Error
         {
-            Tasklet.tasklet_leaves("with socket_accept");
             Socket s2 = PthThread.socket_accept(s);
-            Tasklet.tasklet_regains("from socket_accept");
             return new ConnectedStreamSocket(s2);
         }
 
@@ -200,9 +198,7 @@ namespace Tasklets
         public IConnectedStreamSocket socket_connect(string addr, uint16 port) throws Error
         {
             assert(s != null);
-            Tasklet.tasklet_leaves("with socket_connect");
             PthThread.socket_connect(s, addr, port);
-            Tasklet.tasklet_regains("from socket_connect");
             IConnectedStreamSocket ret = new ConnectedStreamSocket(s);
             s = null;
             return ret;
@@ -251,9 +247,7 @@ namespace Tasklets
         {
             uchar[] buffer = new uchar[maxlen];
             Posix.memcpy(buffer, data, maxlen);
-            Tasklet.tasklet_leaves("with socket_send");
             int ret = (int)PthThread.socket_send(s, buffer);
-            Tasklet.tasklet_regains("from socket_send");
             return ret;
         }
 
@@ -265,9 +259,7 @@ namespace Tasklets
         public uchar[] recv(int maxlen) throws Error
         {
             uchar[] ret;
-            Tasklet.tasklet_leaves("with socket_recv");
             PthThread.socket_recv(s, out ret, maxlen);
-            Tasklet.tasklet_regains("from socket_recv");
             return ret;
         }
 
@@ -320,26 +312,20 @@ namespace Tasklets
         public uchar[] recvfrom(int maxsize, out string rmt_ip, out uint16 rmt_port) throws Error
         {
             uchar[] ret;
-            Tasklet.tasklet_leaves("with socket_recvfrom");
             PthThread.socket_recvfrom(s, out ret, maxsize, out rmt_ip, out rmt_port);
-            Tasklet.tasklet_regains("from socket_recvfrom");
             return ret;
         }
 
         public size_t recvfrom_new(uint8* b, size_t maxlen, out string rmt_ip, out uint16 rmt_port) throws Error
         {
             size_t ret;
-            Tasklet.tasklet_leaves("with socket_recvfrom");
             ret = PthThread.socket_recvfrom_new(s, b, maxlen, out rmt_ip, out rmt_port);
-            Tasklet.tasklet_regains("from socket_recvfrom");
             return ret;
         }
 
         public void sendto(uchar[] mesg, string rmt_ip, uint16 rmt_port) throws Error
         {
-            Tasklet.tasklet_leaves("with socket_sendto");
             PthThread.socket_sendto(s, mesg, rmt_ip, rmt_port);
-            Tasklet.tasklet_regains("from socket_sendto");
         }
 
         public void close() throws Error
@@ -373,17 +359,13 @@ namespace Tasklets
 
         public void send(uchar[] mesg) throws Error
         {
-            Tasklet.tasklet_leaves("with socket_sendtobroad");
             PthThread.socket_sendto(s, mesg, "255.255.255.255", port);
-            Tasklet.tasklet_regains("from socket_sendtobroad");
         }
 
         public size_t send_new(uint8* b, size_t len) throws Error
         {
             size_t ret;
-            Tasklet.tasklet_leaves("with socket_sendtobroad");
             ret = PthThread.socket_sendto_new(s, b, len, "255.255.255.255", port);
-            Tasklet.tasklet_regains("from socket_sendtobroad");
             return ret;
         }
 

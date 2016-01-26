@@ -1,6 +1,6 @@
 /*
  *  This file is part of Netsukuku.
- *  (c) Copyright 2011 Luca Dionisi aka lukisi <luca.dionisi@gmail.com>
+ *  (c) Copyright 2011-2016 Luca Dionisi aka lukisi <luca.dionisi@gmail.com>
  *
  *  Netsukuku is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,37 +19,10 @@
 using Gee;
 using Wrapped.LibPth;
 
-namespace Tasklets
+namespace PthTasklet
 {
     [CCode (has_target = false)]
     public delegate void * Spawnable (void* user_data) throws Error;
-
-#if log_tasklet
-    private string tasklet_id()
-    {
-        string ret = @"$(Tasklet.self().id)";
-        int len = ret.length;
-        for (int i = 0; i < 5-len; i++) ret = " " + ret;
-        return @"[$(ret)] ";
-    }
-#else
-    private string tasklet_id()
-    {
-        return "";
-    }
-#endif
-    internal void log_debug(string msg)     {Posix.syslog(Posix.LOG_DEBUG,
-                    tasklet_id() + "DEBUG "  + msg);}
-    internal void log_info(string msg)      {Posix.syslog(Posix.LOG_INFO,
-                    tasklet_id() + "INFO "   + msg);}
-    internal void log_notice(string msg)    {Posix.syslog(Posix.LOG_NOTICE,
-                    tasklet_id() + "INFO+ "  + msg);}
-    internal void log_warn(string msg)      {Posix.syslog(Posix.LOG_WARNING,
-                    tasklet_id() + "INFO++ " + msg);}
-    internal void log_error(string msg)     {Posix.syslog(Posix.LOG_ERR,
-                    tasklet_id() + "ERROR "  + msg);}
-    internal void log_critical(string msg)  {Posix.syslog(Posix.LOG_CRIT,
-                    tasklet_id() + "ERROR+ " + msg);}
 
     public delegate void TaskletCallback(Object? obj1, Object? obj2, Object? obj3, Object? obj4) throws Error;
     public delegate bool ConditionFunc();
@@ -61,213 +34,6 @@ namespace Tasklets
         public Object? obj2;
         public Object? obj3;
         public Object? obj4;
-    }
-
-    /** Set of methods to help monitoring the tasklets.
-      *
-      * When the tasklet system is initiated, the program can provide callbacks
-      * in order to control the type of object that maintain the data.
-      * For instance, the object Stat has data for the id of tasklet and its
-      * spawner and the funcname (as it can be reported by using the method
-      * declare_self). The program could provide a subclass that can contain
-      * the time of starting and ending of the tasklet.
-      */
-    public class Stat : Object
-    {
-        public int id;
-        public int parent;
-        public string funcname = "";
-        public Status status;
-        public string crash_message = "";
-
-        // logs
-        private int next_log_pos = 0;
-        private LinkedList<StatLog> mylogs;
-        private void init_logs()
-        {
-            if (mylogs == null)
-            {
-                mylogs = new LinkedList<StatLog>();
-            }
-        }
-        private void expunge_logs()
-        {
-            while (true)
-            {
-                if (mylogs.is_empty) break;
-                if (mylogs[0].tm.is_expired()) mylogs.remove_at(0);
-                else break;
-            }
-        }
-        public void log(string msg)
-        {
-            init_logs();
-            expunge_logs();
-            StatLog log = new StatLog();
-            log.pos = next_log_pos++;
-            log.msg = msg;
-            log.tm = new Timer(1000);
-            mylogs.add(log);
-        }
-        public LinkedList<string> get_logs()
-        {
-            init_logs();
-            expunge_logs();
-            LinkedList<string> ret = new LinkedList<string>();
-            if (! mylogs.is_empty)
-            {
-                // first item is the pos of first log
-                ret.add(@"$(mylogs[0].pos)");
-                foreach (StatLog log in mylogs)
-                {
-                    ret.add(log.msg);
-                }
-            }
-            return ret;
-        }
-
-        public static bool equal_func(Stat a, Stat b)
-        {
-            return a.id == b.id;
-        }
-    }
-
-    public class StatLog : Object
-    {
-        public int pos;
-        public string msg;
-        public Timer tm;
-    }
-
-    public enum EventType {
-        STARTED,
-        ENDED,
-        CRASHED,
-        ABORTED
-    }
-
-    public enum Status {
-        SPAWNED,
-        STARTED,
-        ENDED,
-        CRASHED,
-        ABORTED
-    }
-
-    public delegate Stat CreateTaskletStat();
-    public delegate void TaskletEvent(Stat tasklet, EventType event_type);
-
-    private CreateTaskletStat? create_tasklet_stat_func=null;
-    private TaskletEvent? tasklet_event_func=null;
-    private HashMap<int, Stat>? tasklet_stats=null;
-
-    public void
-    init_stats
-    (CreateTaskletStat? _create_tasklet_stat_func=null,
-     TaskletEvent? _tasklet_event_func=null)
-    {
-        create_tasklet_stat_func = () => {return new Stat();};
-        tasklet_event_func = (tasklet, event_type) => {};
-        if (_create_tasklet_stat_func != null)
-            create_tasklet_stat_func = _create_tasklet_stat_func;
-        if (_tasklet_event_func != null)
-            tasklet_event_func = _tasklet_event_func;
-        tasklet_stats = new HashMap<int, Stat>();
-    }
-
-    /** get all statistics
-     */
-    public ArrayList<Stat>? get_tasklet_stats()
-    {
-        if (tasklet_stats == null) return null;
-        ArrayList<Stat> ret =
-                new ArrayList<Stat>(Stat.equal_func);
-        ret.add_all(tasklet_stats.values);
-        return ret;
-    }
-
-    /** remove some statistics
-     */
-    public void purge_tasklet_stats(Gee.List<int> ids)
-    {
-        if (tasklet_stats == null) return;
-        foreach (int id in ids) tasklet_stats.unset(id);
-    }
-
-    /** get my statistics
-     */
-    private Stat self_tasklet_stats()
-    {
-        return tasklet_stats[Tasklet.self().id];
-    }
-
-    /** use my statistics for logging
-     */
-    private void self_log(string msg)
-    {
-        if (tasklet_stats == null) return;
-        self_tasklet_stats().log(msg);
-    }
-
-    /** use my parent's statistics for logging
-     */
-    private void parent_log(string msg)
-    {
-        if (tasklet_stats == null) return;
-        int parent_id = self_tasklet_stats().parent;
-        if (tasklet_stats.has_key(parent_id))
-        {
-            tasklet_stats[parent_id].log(msg);
-        }
-    }
-
-    /** use my grandparent's statistics for logging
-     */
-    private void grandparent_log(string msg)
-    {
-        if (tasklet_stats == null) return;
-        int parent_id = self_tasklet_stats().parent;
-        if (tasklet_stats.has_key(parent_id))
-        {
-            int grandparent_id = tasklet_stats[parent_id].parent;
-            if (tasklet_stats.has_key(grandparent_id))
-            {
-                tasklet_stats[grandparent_id].log(msg);
-            }
-        }
-    }
-
-    /** Get recent logs for a given tasklet (id)
-      * 1st item is name for tasklet 'id'.
-      *  As special case, name="STOPPED" means the tasklet is stopped and no more logs will come from there.
-      * 2nd item (if existent) is the pos of first log.
-      * Following items are logs.
-      */
-    private LinkedList<string> get_logs(int id)
-    {
-        LinkedList<string> ret = new LinkedList<string>();
-        if (tasklet_stats != null)
-        {
-            if (! tasklet_stats.has_key(id))
-            {
-                ret.add("STOPPED");
-            }
-            else
-            {
-                Stat s = tasklet_stats[id];
-                if (s.status != Status.STARTED &&
-                    s.status != Status.SPAWNED)
-                {
-                    ret.add("STOPPED");
-                }
-                else
-                {
-                    ret = s.get_logs();
-                    ret.offer_head(s.funcname);
-                }
-            }
-        }
-        return ret;
     }
 
     /** data for function exec_command.
@@ -311,21 +77,6 @@ namespace Tasklets
       */
     public class Tasklet : Object
     {
-        public static void tasklet_leaves(string reason="")
-        {
-#if log_tasklet_switch
-            Tasklets.log_debug(@"Tasklet $(self().id) gives yield ($(reason)).");
-#else
-#endif
-        }
-        public static void tasklet_regains(string reason="")
-        {
-#if log_tasklet_switch
-            Tasklets.log_debug(@"Tasklet $(self().id) gains back control ($(reason)).");
-#else
-#endif
-        }
-
         private static Tasklet? main = null;
         private static HashMap<PthThread, Tasklet> _tasklets;
         private static HashMap<PthThread, Tasklet> tasklets {
@@ -395,10 +146,8 @@ namespace Tasklets
             {
                 _next = next.pth;
             }
-            Tasklet.tasklet_leaves();
             /*int retval =*/ PthThread.pth_yield(_next);
             // TODO if (retval == 0) throw new;
-            Tasklet.tasklet_regains();
         }
 
         public static void schedule_back()
@@ -413,99 +162,24 @@ namespace Tasklets
             return ret;
         }
 
-        public static void declare_self(string fname)
-        {
-            if (tasklet_stats != null)
-            {
-                int self_id = self().id;
-                Stat st = tasklet_stats[self_id];
-                if (st.funcname != "") st.funcname += " => ";
-                st.funcname += fname;
-            }
-        }
-
-        public static void declare_finished(string fname)
-        {
-            if (tasklet_stats != null)
-            {
-                int self_id = self().id;
-                Stat st = tasklet_stats[self_id];
-                string toremove = " => " + fname;
-                if (st.funcname.length > toremove.length &&
-                    st.funcname.substring(st.funcname.length - toremove.length) == toremove)
-                    st.funcname = st.funcname.substring(0, st.funcname.length - toremove.length);
-            }
-        }
-
-        /** use my tasklet for logging
-         */
-        public static void self_log(string msg)
-        {
-            Tasklets.self_log(msg);
-        }
-
-        /** use my parent's tasklet for logging
-         */
-        public static void parent_log(string msg)
-        {
-            Tasklets.parent_log(msg);
-        }
-
-        /** use my parent's tasklet for logging
-         */
-        public static void grandparent_log(string msg)
-        {
-            Tasklets.grandparent_log(msg);
-        }
-
-        /** Get recent logs for a given tasklet (id)
-          * 1st item is name for tasklet 'id'.
-          *  As special case, name="STOPPED" means the tasklet is stopped and no more logs will come from there.
-          * 2nd item (if existent) is the pos of first log.
-          * Following items are logs.
-          */
-        public static LinkedList<string> get_logs(int id)
-        {
-            return Tasklets.get_logs(id);
-        }
-
         public static void nap(long sec, long usec)
         {
-            Tasklet.tasklet_leaves("with nap");
             PthThread.nap(sec, usec);
-            Tasklet.tasklet_regains("from nap");
         }
 
         public static int system(string? command)
         {
-            Tasklet.tasklet_leaves("with system");
-            int ret = PthThread.system(command);
-            Tasklet.tasklet_regains("from system");
-            return ret;
+            return PthThread.system(command);
         }
 
         public static size_t read(int fd, void* b, size_t nbytes) throws Error
         {
-            Tasklet.tasklet_leaves("with read");
-            size_t ret = 0; // valac's bug: this initialization should not be needed
-            try {
-                ret = PthThread.read(fd, b, nbytes);
-            } finally {
-                Tasklet.tasklet_regains("from read");
-            }
-            return ret;
+            return PthThread.read(fd, b, nbytes);
         }
 
         public static size_t write(int fd, void* b, size_t nbytes) throws Error
         {
-            Tasklet.tasklet_leaves("with write");
-            size_t ret = 0; // valac's bug: this initialization should not be needed
-            try {
-                ret = PthThread.write(fd, b, nbytes);
-            } finally {
-                Tasklet.tasklet_regains("from write");
-            }
-            return ret;
+            return PthThread.write(fd, b, nbytes);
         }
 
         /** Launch a process and block this tasklet till it ends.
@@ -607,7 +281,7 @@ namespace Tasklets
             Posix.close(standard_error);
             if (waitpid_status == -1)
             {
-                log_warn(@"Tasklet: process '$(cmdline)' failed with errno = $(Posix.errno).");
+                warning(@"Tasklet: process '$(cmdline)' failed with errno = $(Posix.errno).");
                 com_ret.exit_status = -1;
             }
             else if (Process.if_exited(waitpid_status))
@@ -616,17 +290,17 @@ namespace Tasklets
             }
             else if (Process.if_signaled(waitpid_status))
             {
-                log_info(@"Tasklet: process '$(cmdline)' was terminated by a signal");
+                debug(@"Tasklet: process '$(cmdline)' was terminated by a signal");
                 com_ret.exit_status = (int)Process.term_sig(waitpid_status);
             }
             else if (Process.if_stopped(waitpid_status))
             {
-                log_info(@"Tasklet: process '$(cmdline)' was _stopped_ by a signal");
+                debug(@"Tasklet: process '$(cmdline)' was _stopped_ by a signal");
                 com_ret.exit_status = (int)Process.stop_sig(waitpid_status);
             }
             else if (Process.core_dump(waitpid_status))
             {
-                log_warn(@"Tasklet: process '$(cmdline)' core dumped.");
+                warning(@"Tasklet: process '$(cmdline)' core dumped.");
                 com_ret.exit_status = -1;
             }
             cmdout_buf[cmdout_i] = '\0';
@@ -678,13 +352,6 @@ namespace Tasklets
             function_params_tuple_p->params_tuple_p = params_tuple_p;
             // spawn
             Tasklet retval = new Tasklet();
-            if (tasklet_stats != null)
-            {
-                tasklet_stats[retval.id] = create_tasklet_stat_func();
-                tasklet_stats[retval.id].id = retval.id;
-                tasklet_stats[retval.id].parent = self().id;
-                tasklet_stats[retval.id].status = Status.SPAWNED;
-            }
             Attribute attr = new Attribute();
             attr.name = @"id = $(retval.id)";
             if (stacksize > 0) attr.set_stacksize(stacksize);
@@ -720,11 +387,6 @@ namespace Tasklets
 
         public void abort()
         {
-            if (tasklet_stats != null)
-            {
-                tasklet_stats[id].status = Status.ABORTED;
-                tasklet_event_func(tasklet_stats[id], EventType.ABORTED);
-            }
             pth.abort();
         }
 
@@ -736,32 +398,15 @@ namespace Tasklets
 
         private static void *tasklet_marshaller(void *v)
         {
-            int self_id = self().id;
             void *result = null;
             try
             {
                 tasklet_function_params_tuple *function_params_tuple_p = (tasklet_function_params_tuple *)v;
-                if (tasklet_stats != null)
-                {
-                    tasklet_stats[self_id].status = Status.STARTED;
-                    tasklet_event_func(tasklet_stats[self_id], EventType.STARTED);
-                }
                 result = function_params_tuple_p->function(function_params_tuple_p->params_tuple_p);
             }
             catch (Error e)
             {
-                Tasklets.log_warn(@"a microfunc reported an error: $(e.message)");
-                if (tasklet_stats != null)
-                {
-                    tasklet_stats[self_id].status = Status.CRASHED;
-                    tasklet_stats[self_id].crash_message = e.message;
-                    tasklet_event_func(tasklet_stats[self_id], EventType.CRASHED);
-                }
-            }
-            if (tasklet_stats != null && tasklet_stats[self_id].status != Status.CRASHED)
-            {
-                tasklet_stats[self_id].status = Status.ENDED;
-                tasklet_event_func(tasklet_stats[self_id], EventType.ENDED);
+                warning(@"a microfunc reported an error: $(e.message)");
             }
             return result;
         }

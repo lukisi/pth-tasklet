@@ -6,14 +6,14 @@ autoreconf --install
 
 mkdir Debug
 cd Debug
-CFLAGS='-g -O0' ../configure --disable-silent-rules --enable-logtasklet
+CFLAGS='-g -O0' ../configure --disable-silent-rules
 make
 
 # Build and install
 
 mkdir finalbuild
 cd finalbuild
-../configure --enable-logtasklet --prefix=/usr
+../configure --prefix=/usr
 make
 make check
 make dist

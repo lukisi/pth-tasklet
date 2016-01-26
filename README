@@ -1,14 +1,5 @@
-libtasklet
+libpth-tasklet
 ==========
 
-Tasklets are ...
+This library is an implementation of tasklet-system based on GNU Pth.
 
-The library aims to make it easy to implement spawnable class methods in
-the Vala language.
-
-It is based on GNU Pth.
-
-Features
-========
-
-...
