@@ -20,7 +20,7 @@ using Gee;
 
 namespace PthTasklet
 {
-    public errordomain ChannelError {
+    internal errordomain ChannelError {
         TIMEOUT_EXPIRED,
         GENERIC
     }
@@ -38,7 +38,7 @@ namespace PthTasklet
       *  * it is possible to know how many messages are in a Channel to be received or
       *    how many tasklets are waiting to receive in a Channel (property balance)
       */
-    public class Channel:Object
+    internal class Channel:Object
     {
         private class Message:Object
         {

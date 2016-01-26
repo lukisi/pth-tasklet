@@ -24,11 +24,11 @@ using Gee;
 
 namespace Wrapped.LibPth
 {
-    public const int MAX_PRIORITY = Native.LibPth.PRIO_MAX;
-    public const int STD_PRIORITY = Native.LibPth.PRIO_STD;
-    public const int MIN_PRIORITY = Native.LibPth.PRIO_MIN;
+    internal const int MAX_PRIORITY = Native.LibPth.PRIO_MAX;
+    internal const int STD_PRIORITY = Native.LibPth.PRIO_STD;
+    internal const int MIN_PRIORITY = Native.LibPth.PRIO_MIN;
 
-    public enum States
+    internal enum States
     {
         STATE_SCHEDULER = Native.LibPth.STATE_SCHEDULER,
         STATE_NEW = Native.LibPth.STATE_NEW,
@@ -37,7 +37,7 @@ namespace Wrapped.LibPth
         STATE_DEAD = Native.LibPth.STATE_DEAD,
     }
 
-    public enum AttributeNames
+    internal enum AttributeNames
     {
         ATTR_PRIO = Native.LibPth.ATTR_PRIO,
         ATTR_NAME = Native.LibPth.ATTR_NAME,
@@ -56,7 +56,7 @@ namespace Wrapped.LibPth
         ATTR_BOUND = Native.LibPth.ATTR_BOUND,
     }
 
-    public bool init()
+    internal bool init()
     {
         int ret = Native.LibPth.init();
         if (ret == 0) return false;
@@ -65,14 +65,14 @@ namespace Wrapped.LibPth
         return true;
     }
 
-    public bool kill()
+    internal bool kill()
     {
         int ret = Native.LibPth.kill();
         if (ret == 0) return false;
         return true;
     }
 
-    public class Attribute : Object
+    internal class Attribute : Object
     {
         internal Native.LibPth.attr_st *attr;
         public string? name = null;
@@ -119,7 +119,7 @@ namespace Wrapped.LibPth
         }
     }
 
-    public class PseudoPointer : Object
+    internal class PseudoPointer : Object
     {
         public static bool equal_func(PseudoPointer a, PseudoPointer b) {return a.p == b.p;}
         public static uint hash_func(PseudoPointer a) {return (uint)a.p;}
@@ -134,7 +134,7 @@ namespace Wrapped.LibPth
         }
     }
 
-    public class PthThread : Object
+    internal class PthThread : Object
     {
         private static PthThread? main = null;
         private static HashMap<PseudoPointer, PthThread> _threads;

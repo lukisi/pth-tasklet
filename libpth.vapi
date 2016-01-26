@@ -20,6 +20,9 @@
  * libpth.vapi - Vala bindings for GNU Pth
  */
 
+[CCode (cname="pth_spawnable", cheader_filename = "pth_addendum.h", has_target = false)]
+public delegate void * Native.LibPth.Spawnable (void* user_data);
+
 [CCode(cheader_filename = "pth.h",
        lower_case_cprefix = "pth_", cprefix = "PTH_")]
 namespace Native.LibPth {

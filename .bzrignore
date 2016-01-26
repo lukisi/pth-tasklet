@@ -21,7 +21,6 @@ pth-tasklet.vapi
 libwrappth.c
 tasklet.c
 tasklet_system_tasklet.c
-use_with_libpth_vapi.c
 testname.c
 test_commands.c
 testname

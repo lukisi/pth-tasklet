@@ -22,10 +22,10 @@ using Wrapped.LibPth;
 namespace PthTasklet
 {
     [CCode (has_target = false)]
-    public delegate void * Spawnable (void* user_data) throws Error;
+    internal delegate void * Spawnable (void* user_data) throws Error;
 
-    public delegate void TaskletCallback(Object? obj1, Object? obj2, Object? obj3, Object? obj4) throws Error;
-    public delegate bool ConditionFunc();
+    internal delegate void TaskletCallback(Object? obj1, Object? obj2, Object? obj3, Object? obj4) throws Error;
+    internal delegate bool ConditionFunc();
 
     struct struct_helper_tasklet_callback
     {
@@ -43,7 +43,7 @@ namespace PthTasklet
     char[] cmderr_buf = null;
     const int buf_size = 20000;
 
-    public class CommandResult : Object
+    internal class CommandResult : Object
     {
         public string cmdout;
         public string cmderr;
@@ -75,7 +75,7 @@ namespace PthTasklet
       *  * method join waits for a thread to complete and can get a void* from it;
       *  * ...
       */
-    public class Tasklet : Object
+    internal class Tasklet : Object
     {
         private static Tasklet? main = null;
         private static HashMap<PthThread, Tasklet> _tasklets;

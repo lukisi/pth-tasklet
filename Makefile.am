@@ -6,7 +6,6 @@ lib_LTLIBRARIES = \
 	$(NULL)
 
 libpth_tasklet_la_SOURCES = \
-	use_with_libpth_vapi.vala \
 	libwrappth.vala \
 	tasklet.vala \
 	tasklet_system_tasklet.vala \
@@ -47,43 +46,11 @@ libpth_tasklet_la_LIBADD = \
 	$(NULL)
 
 TESTS = \
-	testname \
 	test_commands \
 	$(NULL)
 
 check_PROGRAMS = \
-	testname \
 	test_commands \
-	$(NULL)
-
-testname_SOURCES = \
-	testsuites/testname/testname.vala \
-	posix_extras.vapi \
-	libpth.vapi \
-	pth-tasklet.vapi \
-	$(NULL)
-
-testname_VALAFLAGS = \
-	--main=PthTasklet.Test.NameTester.main \
-	--pkg glib-2.0 \
-	--pkg gio-2.0 \
-	--pkg gee-0.8 \
-	--pkg posix \
-	--pkg tasklet-system \
-	$(NULL)
-
-testname_CPPFLAGS = \
-	$(GOBJECT_CFLAGS) \
-	$(GIO_CFLAGS) \
-	$(GEE_CFLAGS) \
-	-I$(srcdir) \
-	$(NULL)
-
-testname_LDADD = \
-	$(GOBJECT_LIBS) \
-	$(GIO_LIBS) \
-	$(GEE_LIBS) \
-	$(builddir)/libpth-tasklet.la \
 	$(NULL)
 
 test_commands_SOURCES = \
@@ -106,6 +73,7 @@ test_commands_CPPFLAGS = \
 	$(GOBJECT_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GEE_CFLAGS) \
+	$(TASKLETSYSTEM_CFLAGS) \
 	-I$(srcdir) \
 	$(NULL)
 
@@ -113,6 +81,7 @@ test_commands_LDADD = \
 	$(GOBJECT_LIBS) \
 	$(GIO_LIBS) \
 	$(GEE_LIBS) \
+	$(TASKLETSYSTEM_LIBS) \
 	$(builddir)/libpth-tasklet.la \
 	$(NULL)
 

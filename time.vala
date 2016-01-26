@@ -20,7 +20,7 @@ using Gee;
 
 namespace PthTasklet
 {
-    public void ms_wait(int64 msec)
+    internal void ms_wait(int64 msec)
     {
         int64 sec = msec / (int64)1000;
         int64 undersec = msec - sec * (int64)1000;
@@ -30,7 +30,7 @@ namespace PthTasklet
 
     /** Class for "timeouts" or "timespans"
       */
-    public class Timer : Object
+    internal class Timer : Object
     {
         protected TimeVal exp;
         public Timer(int64 msec_ttl)

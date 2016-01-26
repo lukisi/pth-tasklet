@@ -24,7 +24,7 @@ using Gee;
 
 namespace PthTasklet
 {
-    public struct struct_channel
+    internal struct struct_channel
     {
         public Channel self;
     }
@@ -36,7 +36,7 @@ namespace PthTasklet
       *
       * An example is the method "dispatched" of the class "Microfuncs" in the tester.
       */
-    public class TaskletDispatcher : Object
+    internal class TaskletDispatcher : Object
     {
         class Record : Object
         {

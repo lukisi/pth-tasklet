@@ -34,19 +34,19 @@ namespace PthTasklet
       * These emulation will work only with IPV4.
       * For now this is not a problem because IPV6 is currently disabled.
       */
-    public string s_addr_to_string(string family, uint32 s_addr)
+    internal string s_addr_to_string(string family, uint32 s_addr)
     {
         assert(family == "AF_INET");
         Posix.SockAddrIn saddr = Posix.SockAddrIn();
         saddr.sin_addr.s_addr = Posix.htonl(s_addr);
         return Posix.inet_ntoa(saddr.sin_addr);
     }
-    public uint32 string_to_s_addr(string family, string dotted)
+    internal uint32 string_to_s_addr(string family, string dotted)
     {
         assert(family == "AF_INET");
         return Posix.ntohl(Posix.inet_addr(dotted));
     }
-    public string pip_to_dotted(string family, uchar[] pip)
+    internal string pip_to_dotted(string family, uchar[] pip)
     {
         assert(pip.length == 4);
         int a1 = (int)pip[0];
@@ -56,7 +56,7 @@ namespace PthTasklet
         uint32 s_addr = a4 + a3*256 + a2*256*256 + a1*256*256*256;
         return s_addr_to_string(family, s_addr);
     }
-    public uchar[] dotted_to_pip(string family, string dotted)
+    internal uchar[] dotted_to_pip(string family, string dotted)
     {
         uint32 s_addr = string_to_s_addr(family, dotted);
         int a1 = (int)(s_addr / (256*256*256));
@@ -77,7 +77,7 @@ namespace PthTasklet
     /** When you have a socket connected to a server, or when you receive
       *  a connection, you get an obscure object that implements this API.
       */
-    public interface IConnectedStreamSocket : Object
+    internal interface IConnectedStreamSocket : Object
     {
         public uint16 peer_port {
             get {
@@ -141,7 +141,7 @@ namespace PthTasklet
       * In particular, you can wait for a connection without blocking the
       *  rest of the application.
       */
-    public class ServerStreamSocket : Object
+    internal class ServerStreamSocket : Object
     {
         private Socket s;
 
@@ -181,7 +181,7 @@ namespace PthTasklet
       * In particular, you can wait for the connect to complete without
       *  blocking the rest of the application.
       */
-    public class ClientStreamSocket : Object
+    internal class ClientStreamSocket : Object
     {
         private Socket s;
 
@@ -281,7 +281,7 @@ namespace PthTasklet
       * Or else handle the request on another tasklet and, when necessary,
       *  use an BroadcastClientDatagramSocket to send a reply.
       */
-    public class ServerDatagramSocket : Object
+    internal class ServerDatagramSocket : Object
     {
         private Socket s;
 
@@ -342,7 +342,7 @@ namespace PthTasklet
     /** Use this class to send a single UDP datagram in broadcast over
       *  a particular interface.
       */
-    public class BroadcastClientDatagramSocket : Object
+    internal class BroadcastClientDatagramSocket : Object
     {
         private Socket s;
         private uint16 port;
