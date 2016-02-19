@@ -348,12 +348,16 @@ namespace PthTasklet
         private uint16 port;
         public string dev {get; private set;}
 
-        public BroadcastClientDatagramSocket(string dev, uint16 port) throws Error
+        public BroadcastClientDatagramSocket(string dev, uint16 port, string? bind_ip = null) throws Error
         {
             this.port = port;
             this.dev = dev;
             s = new Socket(SocketFamily.IPV4, SocketType.DATAGRAM, SocketProtocol.UDP);
             sk_bindtodevice(s, dev);
+            if (bind_ip == null)
+                s.bind(new InetSocketAddress(new InetAddress.any(SocketFamily.IPV4), port), true);
+            else
+                s.bind(new InetSocketAddress(new InetAddress.from_string(bind_ip), port), true);
             sk_setbroadcast(s);
         }
 

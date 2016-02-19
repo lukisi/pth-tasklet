@@ -114,9 +114,9 @@ namespace PthTaskletImplementer
             return new MyServerDatagramSocket(s);
         }
 
-        public IClientDatagramSocket get_client_datagram_socket(uint16 port, string dev) throws Error
+        public IClientDatagramSocket get_client_datagram_socket(uint16 port, string dev, string? my_addr=null) throws Error
         {
-            return new MyClientDatagramSocket(new PthTasklet.BroadcastClientDatagramSocket(dev, port));
+            return new MyClientDatagramSocket(new PthTasklet.BroadcastClientDatagramSocket(dev, port, my_addr));
         }
 
         public IChannel get_channel()
