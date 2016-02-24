@@ -96,6 +96,16 @@ namespace PthTaskletImplementer
             return ret;
         }
 
+        public size_t read(int fd, void* b, size_t maxlen) throws Error
+        {
+            return PthTasklet.Tasklet.read(fd, b, maxlen);
+        }
+
+        public size_t write(int fd, void* b, size_t count) throws Error
+        {
+            return PthTasklet.Tasklet.write(fd, b, count);
+        }
+
         public IServerStreamSocket get_server_stream_socket(uint16 port, string? my_addr=null) throws Error
         {
             PthTasklet.ServerStreamSocket s = new PthTasklet.ServerStreamSocket(port, 5, my_addr);
