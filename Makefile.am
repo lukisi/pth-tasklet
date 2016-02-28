@@ -96,6 +96,7 @@ pkgconfig_DATA = pth-tasklet.pc
 
 EXTRA_DIST = \
 	pth-tasklet.pc.in \
+	pth_addendum.h \
 	$(NULL)
 
 MAINTAINERCLEANFILES = \
