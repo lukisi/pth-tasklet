@@ -1,5 +1,5 @@
-libpth-tasklet
-==========
+Part of Netsukuku.
 
 This library is an implementation of tasklet-system based on GNU Pth.
+The ''ntkd'' daemon depends on it.
 
