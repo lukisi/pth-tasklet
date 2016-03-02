@@ -26,7 +26,6 @@ test_commands.c
 testname
 Debug
 pth-tasklet.h
-m4/*
 testpkg
 tasklet_blocking_sockets.c
 channel.c
