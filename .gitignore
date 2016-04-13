@@ -1,4 +1,11 @@
 Makefile.in
+pth-tasklet.pc
+test-suite.log
+test_commands
+test_commands.log
+test_commands.trs
+.dirstamp
+*.o
 *.lo
 *.la
 .deps
