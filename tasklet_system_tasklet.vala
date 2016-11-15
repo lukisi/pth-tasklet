@@ -86,10 +86,10 @@ namespace PthTaskletImplementer
             return h;
         }
 
-        public TaskletCommandResult exec_command(string cmdline) throws Error
+        public TaskletCommandResult exec_command_argv(string[] argv) throws Error
         {
             TaskletCommandResult ret = new TaskletCommandResult();
-            PthTasklet.CommandResult res = PthTasklet.Tasklet.exec_command(cmdline);
+            PthTasklet.CommandResult res = PthTasklet.Tasklet.exec_command(argv);
             ret.exit_status = res.exit_status;
             ret.stdout = res.cmdout;
             ret.stderr = res.cmderr;

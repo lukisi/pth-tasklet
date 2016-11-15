@@ -185,7 +185,7 @@ namespace PthTasklet
         /** Launch a process and block this tasklet till it ends.
           * Returns exit status, stdout and stderr.
           */
-        public static CommandResult exec_command(string cmdline) throws SpawnError
+        public static CommandResult exec_command(string[] argv) throws SpawnError
         {
             CommandResult com_ret = new CommandResult();
             com_ret.cmdout = "";
@@ -200,7 +200,7 @@ namespace PthTasklet
             Pid child_pid;
             int standard_output;
             int standard_error;
-            Process.spawn_async_with_pipes(null, cmdline.split(" "), null,
+            Process.spawn_async_with_pipes(null, argv, null,
                 SpawnFlags.DO_NOT_REAP_CHILD | SpawnFlags.SEARCH_PATH,
                 null,
                 out child_pid,
@@ -281,7 +281,7 @@ namespace PthTasklet
             Posix.close(standard_error);
             if (waitpid_status == -1)
             {
-                warning(@"Tasklet: process '$(cmdline)' failed with errno = $(Posix.errno).");
+                warning(@"Tasklet: process '$(argv[0])' failed with errno = $(Posix.errno).");
                 com_ret.exit_status = -1;
             }
             else if (Process.if_exited(waitpid_status))
@@ -290,17 +290,17 @@ namespace PthTasklet
             }
             else if (Process.if_signaled(waitpid_status))
             {
-                debug(@"Tasklet: process '$(cmdline)' was terminated by a signal");
+                debug(@"Tasklet: process '$(argv[0])' was terminated by a signal");
                 com_ret.exit_status = (int)Process.term_sig(waitpid_status);
             }
             else if (Process.if_stopped(waitpid_status))
             {
-                debug(@"Tasklet: process '$(cmdline)' was _stopped_ by a signal");
+                debug(@"Tasklet: process '$(argv[0])' was _stopped_ by a signal");
                 com_ret.exit_status = (int)Process.stop_sig(waitpid_status);
             }
             else if (Process.core_dump(waitpid_status))
             {
-                warning(@"Tasklet: process '$(cmdline)' core dumped.");
+                warning(@"Tasklet: process '$(argv[0])' core dumped.");
                 com_ret.exit_status = -1;
             }
             cmdout_buf[cmdout_i] = '\0';
