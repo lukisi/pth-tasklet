@@ -185,8 +185,14 @@ namespace PthTasklet
         /** Launch a process and block this tasklet till it ends.
           * Returns exit status, stdout and stderr.
           */
-        public static CommandResult exec_command(string[] argv) throws SpawnError
+        public static CommandResult exec_command(Gee.List<string> argv) throws SpawnError
         {
+            assert(argv.size > 0);
+
+            string[] _argv = new string[argv.size+1];
+            for (int i = 0; i < argv.size; i++) _argv[i] = argv[i];
+            _argv[argv.size] = null;
+
             CommandResult com_ret = new CommandResult();
             com_ret.cmdout = "";
             com_ret.cmderr = "";
@@ -200,7 +206,7 @@ namespace PthTasklet
             Pid child_pid;
             int standard_output;
             int standard_error;
-            Process.spawn_async_with_pipes(null, argv, null,
+            Process.spawn_async_with_pipes(null, _argv, null,
                 SpawnFlags.DO_NOT_REAP_CHILD | SpawnFlags.SEARCH_PATH,
                 null,
                 out child_pid,

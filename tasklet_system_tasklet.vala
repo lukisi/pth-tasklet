@@ -86,7 +86,7 @@ namespace PthTaskletImplementer
             return h;
         }
 
-        public TaskletCommandResult exec_command_argv(string[] argv) throws Error
+        public TaskletCommandResult exec_command_argv(Gee.List<string> argv) throws Error
         {
             TaskletCommandResult ret = new TaskletCommandResult();
             PthTasklet.CommandResult res = PthTasklet.Tasklet.exec_command(argv);
