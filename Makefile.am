@@ -21,6 +21,9 @@ libpth_tasklet_la_SOURCES = \
 libpth_tasklet_la_VALAFLAGS = \
 	-H pth-tasklet.h \
 	--library pth-tasklet \
+	--vapidir $(GIO_PREFIX)/share/vala-0.32/vapi \
+	--vapidir $(GEE_PREFIX)/share/vala/vapi \
+	--vapidir $(TASKLETSYSTEM_VAPIDIR) \
 	--pkg gee-0.8 \
 	--pkg gio-2.0 \
 	--pkg tasklet-system \
@@ -62,6 +65,9 @@ test_commands_SOURCES = \
 
 test_commands_VALAFLAGS = \
 	--main=PthTasklet.Test.CommandsTester.main \
+	--vapidir $(GIO_PREFIX)/share/vala-0.32/vapi \
+	--vapidir $(GEE_PREFIX)/share/vala/vapi \
+	--vapidir $(TASKLETSYSTEM_VAPIDIR) \
 	--pkg glib-2.0 \
 	--pkg gio-2.0 \
 	--pkg gee-0.8 \
