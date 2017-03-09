@@ -3,3 +3,5 @@ Part of Netsukuku.
 This library is an implementation of tasklet-system based on GNU Pth.
 The ''ntkd'' daemon depends on it.
 
+
+See documentation at https://github.com/lukisi/documentation
