@@ -256,6 +256,10 @@ namespace Wrapped.LibPth
             return Native.LibPth.system(command);
         }
         
+        // following function is ok for:
+        //  * a socket (ipv4:stream) which has been 'bind' to a InetSocketAddress with IP and port;
+        //  * a local-socket (unix:stream) which has been 'bind' to a UnixSocketAddress with a pathname.
+        // Vedi ServerStreamLocalSocket.accept su unixdomain/vala/taskletsystem.vala
         public static Socket socket_accept(Socket s) throws Error
         {
             // from Socket to file_descriptor
@@ -269,20 +273,19 @@ namespace Wrapped.LibPth
             Posix.fcntl(fd, Posix.F_SETFL, newflags);
             // call blocking function with Pth support
             int fd2 = Native.LibPth.accept(fd, null, null);
+            if (fd2 == -1) report_error("Native.LibPth.accept");
             // reset old NONBLOCK flag
             Posix.fcntl(fd, Posix.F_SETFL, flags);
-
-            // NOTE: NONBLOCK should be not set in new file descriptor fd2
-
             // from file_descriptor to Socket
             Socket ret = new Socket.from_fd(fd2);
-
-            // NOTE: NONBLOCK should be set in new Socket object ret
-
             return ret;
         }
         
-        public static void socket_connect(Socket s, string address, uint16 port) throws Error
+        // following function is ok for:
+        //  * a socket (ipv4:stream) and a InetSocketAddress with IP and port;
+        //  * a local-socket (unix:stream) and a UnixSocketAddress with a pathname.
+        // Vedi ConnectedStreamLocalSocket.fromconnect su unixdomain/vala/taskletsystem.vala
+        public static void socket_connect(Socket s, SocketAddress addr) throws Error
         {
             // from Socket to file_descriptor
             int fd = s.get_fd();
@@ -294,12 +297,12 @@ namespace Wrapped.LibPth
             int newflags = flags & (~Posix.O_NONBLOCK);
             Posix.fcntl(fd, Posix.F_SETFL, newflags);
             // call blocking function with Pth support
-            SocketAddress addr = new InetSocketAddress(new InetAddress.from_string(address), port);
             size_t destlen = addr.get_native_size();
             void *dest = malloc(destlen);
             addr.to_native(dest, destlen);
             int result = Native.LibPth.connect(fd, (Posix.SockAddr *)dest, destlen);
-            if (result != 0) throw new IOError.CONNECTION_REFUSED(@"Error trying to connect to $(address):$(port)");
+            free(dest);
+            if (result == -1) report_error("Native.LibPth.connect");
             // reset old NONBLOCK flag
             Posix.fcntl(fd, Posix.F_SETFL, flags);
         }
@@ -325,7 +328,11 @@ namespace Wrapped.LibPth
             return result;
         }
         
-        public static size_t socket_send_new(Socket s, uint8* b, size_t maxlen) throws Error
+        // following function is ok for:
+        //  * a socket returned from the above function socket_accept;
+        //  * a socket connected with the above function socket_connect.
+        // Vedi ConnectedStreamLocalSocket.send_part su unixdomain/vala/taskletsystem.vala
+        public static size_t socket_send_new(Socket s, uint8* b, size_t len) throws Error
         {
             // from Socket to file_descriptor
             int fd = s.get_fd();
@@ -337,9 +344,8 @@ namespace Wrapped.LibPth
             int newflags = flags & (~Posix.O_NONBLOCK);
             Posix.fcntl(fd, Posix.F_SETFL, newflags);
             // call blocking function with Pth support
-            ssize_t result = Native.LibPth.send(fd, (void *)b, maxlen, 0);
-            if (result == 0) throw new IOError.CLOSED("Error trying to send to a connected socket");
-            else if (result == -1) report_error("Native.LibPth.send");
+            ssize_t result = Native.LibPth.send(fd, (void *)b, len, 0);
+            if (result == -1) report_error("Native.LibPth.send");
             // reset old NONBLOCK flag
             Posix.fcntl(fd, Posix.F_SETFL, flags);
             return (size_t)result;
@@ -368,6 +374,10 @@ namespace Wrapped.LibPth
             return result;
         }
         
+        // following function is ok for:
+        //  * a socket returned from the above function socket_accept;
+        //  * a socket connected with the above function socket_connect.
+        // Vedi ConnectedStreamLocalSocket.recv su unixdomain/vala/taskletsystem.vala
         public static size_t socket_recv_new(Socket s, uint8* b, size_t maxlen) throws Error
         {
             // from Socket to file_descriptor
@@ -381,8 +391,7 @@ namespace Wrapped.LibPth
             Posix.fcntl(fd, Posix.F_SETFL, newflags);
             // call blocking function with Pth support
             ssize_t result = Native.LibPth.recv(fd, (void *)b, maxlen, 0);
-            if (result == 0) throw new IOError.CLOSED("Error trying to recv from a connected socket");
-            else if (result == -1) report_error("Native.LibPth.recv");
+            if (result == -1) report_error("Native.LibPth.recv");
             // reset old NONBLOCK flag
             Posix.fcntl(fd, Posix.F_SETFL, flags);
             return (size_t)result;
@@ -415,11 +424,12 @@ namespace Wrapped.LibPth
             return result;
         }
         
-        public static size_t socket_sendto_new(Socket s, uint8* b, size_t len, string address, uint16 port) throws Error
+        // following function is ok for:
+        //  * a socket (ipv4:datagram) which has been `bindtodevice` and `setbroadcast` and a InetSocketAddress with IP=255.255.255.255 and port;
+        //  * a local-socket (unix:datagram) and a UnixSocketAddress with a pathname (pointing to a proxy-demon for one own pseudonic).
+        // Vedi ClientDatagramLocalSocket.sendto su unixdomain/vala/taskletsystem.vala
+        public static size_t socket_sendto_new(Socket s, SocketAddress addr, uint8* b, size_t len) throws Error
         {
-            // For a broadcast packet use "255.255.255.255" as address and
-            // use a socket 's' that has been set to broadcast.
-
             // from Socket to file_descriptor
             int fd = s.get_fd();
             // get current NONBLOCK flag
@@ -430,13 +440,12 @@ namespace Wrapped.LibPth
             int newflags = flags & (~Posix.O_NONBLOCK);
             Posix.fcntl(fd, Posix.F_SETFL, newflags);
             // call blocking function with Pth support
-            SocketAddress addr = new InetSocketAddress(new InetAddress.from_string(address), port);
             size_t destlen = addr.get_native_size();
             void *dest = malloc(destlen);
             addr.to_native(dest, destlen);
             ssize_t result = Native.LibPth.sendto(fd, (void *)b, len, 0, (Posix.SockAddr *)dest, destlen);
-            if (result == 0) throw new IOError.FAILED(@"Error trying to send to $(address):$(port)");
-            else if (result == -1) report_error("Native.LibPth.sendto");
+            free(dest);
+            if (result == -1) report_error("Native.LibPth.sendto");
             // reset old NONBLOCK flag
             Posix.fcntl(fd, Posix.F_SETFL, flags);
             return (size_t)result;
@@ -466,7 +475,7 @@ namespace Wrapped.LibPth
             if (addr.sin_family == SocketFamily.IPV4)
             {
                 rmt_port = Posix.ntohs(addr.sin_port);
-                rmt_ip = Posix.inet_ntoa(addr.sin_addr);
+                rmt_ip = Posix.inet_ntoa(addr.sin_addr); // TODO use inet_ntop. see http://beej.us/guide/bgnet/html/multi/ipstructsdata.html
             }
             data = new uchar[result];
             Posix.memcpy(data, temp, result);
@@ -475,7 +484,11 @@ namespace Wrapped.LibPth
             return result;
         }
         
-        public static size_t socket_recvfrom_new(Socket s, uint8* b, size_t maxlen, out string rmt_ip, out uint16 rmt_port) throws Error
+        // following function is ok for:
+        //  * a socket (ipv4:datagram) which has been `bindtodevice` and has been 'bind' to a InetSocketAddress with IPv4_ANY and port;
+        //  * a local-socket (unix:datagram) which has been 'bind' to a UnixSocketAddress with a pathname.
+        // Vedi ServerDatagramLocalSocket.recvfrom su unixdomain/vala/taskletsystem.vala
+        public static size_t socket_recvfrom_new(Socket s, uint8* b, size_t maxlen) throws Error
         {
             // from Socket to file_descriptor
             int fd = s.get_fd();
@@ -487,19 +500,11 @@ namespace Wrapped.LibPth
             int newflags = flags & (~Posix.O_NONBLOCK);
             Posix.fcntl(fd, Posix.F_SETFL, newflags);
             // call blocking function with Pth support
-            //ssize_t recvfrom(int fd, void *buf, size_t buflen, int flags, Posix.SockAddr *addr, size_t *plen);
-            Posix.SockAddrIn addr = Posix.SockAddrIn();
-            size_t len = sizeof(Posix.SockAddrIn);
-            ssize_t result = Native.LibPth.recvfrom(fd, (void *)b, maxlen, 0, (Posix.SockAddr*)(&addr), &len);
-            if (result == 0) throw new IOError.CLOSED("Error trying to recv from a udp socket");
-            else if (result == -1) report_error("Native.LibPth.recvfrom");
-            rmt_ip = "";
-            rmt_port = 0;
-            if (addr.sin_family == SocketFamily.IPV4)
-            {
-                rmt_port = Posix.ntohs(addr.sin_port);
-                rmt_ip = Posix.inet_ntoa(addr.sin_addr);
-            }
+            // From man recv: The recv() call is ... identical to recvfrom() with a NULL src_addr argument.
+            //  ssize_t recv (int sockfd, void *buf, size_t len, int flags);
+            //  ssize_t recvfrom(int fd, void *buf, size_t buflen, int flags, Posix.SockAddr *addr, size_t *plen);
+            ssize_t result = Native.LibPth.recv(fd, (void *)b, maxlen, 0);
+            if (result == -1) report_error("Native.LibPth.recv");
             // reset old NONBLOCK flag
             Posix.fcntl(fd, Posix.F_SETFL, flags);
             return (size_t)result;
