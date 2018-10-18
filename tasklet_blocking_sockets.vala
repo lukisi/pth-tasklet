@@ -26,54 +26,6 @@ using Wrapped.LibPth;
 
 namespace PthTasklet
 {
-    /** Emulate inet_ntop and pton. In python we have:
-            >>> socket.inet_ntop(socket.AF_INET,'1234')
-            '49.50.51.52'
-            >>> socket.inet_pton(socket.AF_INET,'49.50.51.52')
-            '1234'
-      * These emulation will work only with IPV4.
-      * For now this is not a problem because IPV6 is currently disabled.
-      */
-    internal string s_addr_to_string(string family, uint32 s_addr)
-    {
-        assert(family == "AF_INET");
-        Posix.SockAddrIn saddr = Posix.SockAddrIn();
-        saddr.sin_addr.s_addr = Posix.htonl(s_addr);
-        return Posix.inet_ntoa(saddr.sin_addr);
-    }
-    internal uint32 string_to_s_addr(string family, string dotted)
-    {
-        assert(family == "AF_INET");
-        return Posix.ntohl(Posix.inet_addr(dotted));
-    }
-    internal string pip_to_dotted(string family, uchar[] pip)
-    {
-        assert(pip.length == 4);
-        int a1 = (int)pip[0];
-        int a2 = (int)pip[1];
-        int a3 = (int)pip[2];
-        int a4 = (int)pip[3];
-        uint32 s_addr = a4 + a3*256 + a2*256*256 + a1*256*256*256;
-        return s_addr_to_string(family, s_addr);
-    }
-    internal uchar[] dotted_to_pip(string family, string dotted)
-    {
-        uint32 s_addr = string_to_s_addr(family, dotted);
-        int a1 = (int)(s_addr / (256*256*256));
-        s_addr -= a1*256*256*256;
-        int a2 = (int)(s_addr / (256*256));
-        s_addr -= a2*256*256;
-        int a3 = (int)(s_addr / 256);
-        s_addr -= a3*256;
-        int a4 = (int)(s_addr);
-        uchar c1 = (uchar)a1;
-        uchar c2 = (uchar)a2;
-        uchar c3 = (uchar)a3;
-        uchar c4 = (uchar)a4;
-        uchar[] ret = new uchar[] {c1, c2, c3, c4};
-        return ret;
-    }
-
     /** When you have a socket connected to a server, or when you receive
       *  a connection, you get an obscure object that implements this API.
       */
