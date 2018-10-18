@@ -26,84 +26,29 @@ using Wrapped.LibPth;
 
 namespace PthTasklet
 {
-    /** When you have a socket connected to a server, or when you receive
-      *  a connection, you get an obscure object that implements this API.
-      */
-    internal interface IConnectedStreamSocket : Object
-    {
-        public uint16 peer_port {
-            get {
-                return this._peer_port_getter();
-            }
-        }
-        public abstract uint16 _peer_port_getter();
-
-        public string peer_address {
-            get {
-                return this._peer_address_getter();
-            }
-        }
-        public abstract unowned string _peer_address_getter();
-
-        public uint16 my_port {
-            get {
-                return this._my_port_getter();
-            }
-        }
-        public abstract uint16 _my_port_getter();
-
-        public string my_address {
-            get {
-                return this._my_address_getter();
-            }
-        }
-        public abstract unowned string _my_address_getter();
-
-        /** Sends all the bytes. Returns when all the bytes have been reliably sent.
-          */
-        public void send(uchar[] data) throws Error
-        {
-            int remain = data.length;
-            while (remain > 0)
-            {
-                int done = send_part(data, remain);
-                remain -= done;
-                data = data[done:done+remain];
-            }
-        }
-
-        public void send_new(uint8* b, size_t len) throws Error
-        {
-            while (len > 0)
-            {
-                size_t done = send_part_new(b, len);
-                b += done;
-                len -= done;
-            }
-        }
-
-        protected abstract int send_part(uchar[] data, int maxlen) throws Error;
-        protected abstract size_t send_part_new(uint8* b, size_t len) throws Error;
-        public abstract uchar[] recv(int maxlen) throws Error;
-        public abstract size_t recv_new(uint8* b, size_t maxlen) throws Error;
-        public abstract void close() throws Error;
-    }
-
-    /** Use this class to implement a TCP connection oriented service.
+    /** Use this class to implement a TCP connection oriented service or a unix-domain connection oriented service.
       * In particular, you can wait for a connection without blocking the
       *  rest of the application.
       */
     internal class ServerStreamSocket : Object
     {
         private Socket s;
+        private string listen_pathname;
 
-        public ServerStreamSocket(uint16 port, int backlog = 5, string? my_addr = null) throws Error
+        public ServerStreamSocket.network(string my_addr, uint16 my_tcp_port, int backlog = 5) throws Error
         {
-            s = new Socket(SocketFamily.IPV4, SocketType.STREAM, SocketProtocol.TCP);
-            if (my_addr == null)
-                s.bind(new InetSocketAddress(new InetAddress.any(SocketFamily.IPV4), port), true);
-            else
-                s.bind(new InetSocketAddress(new InetAddress.from_string(my_addr), port), true);
+            listen_pathname = null;
+            s = new Socket(SocketFamily.IPV4, SocketType.STREAM, SocketProtocol.DEFAULT);
+            s.bind(new InetSocketAddress(new InetAddress.from_string(my_addr), port), true);
+            s.set_listen_backlog(backlog);
+            s.listen();
+        }
+
+        public ServerStreamSocket.local(string listen_pathname, int backlog = 5) throws Error
+        {
+            this.listen_pathname = listen_pathname;
+            s = new Socket(SocketFamily.UNIX, SocketType.STREAM, SocketProtocol.DEFAULT);
+            s.bind(new UnixSocketAddress(listen_pathname), true);
             s.set_listen_backlog(backlog);
             s.listen();
         }
@@ -112,15 +57,16 @@ namespace PthTasklet
           *  returned object to handle the request. With this instance,
           *  instead, call accept again to wait for more clients.
           */
-        public IConnectedStreamSocket accept() throws Error
+        public ConnectedStreamSocket accept() throws Error
         {
             Socket s2 = PthThread.socket_accept(s);
-            return new ConnectedStreamSocket(s2);
+            return new ConnectedStreamSocket.from_accept(s2);
         }
 
         public void close() throws Error
         {
             s.close();
+            if (listen_pathname != null) FileUtils.unlink(listen_pathname);
         }
 
         ~ServerStreamSocket()
@@ -129,90 +75,36 @@ namespace PthTasklet
         }
     }
 
-    /** Use this class to make a connection to a TCP service.
+    /** Use this class to make a connection to a TCP service or to a unix-domain service.
       * In particular, you can wait for the connect to complete without
       *  blocking the rest of the application.
       */
-    internal class ClientStreamSocket : Object
+    internal class ConnectedStreamSocket : Object
     {
         private Socket s;
 
-        public ClientStreamSocket(string? my_addr = null) throws Error
+        public ConnectedStreamSocket.from_accept(Socket s) throws Error
         {
-            s = new Socket(SocketFamily.IPV4, SocketType.STREAM, SocketProtocol.TCP);
-            if (my_addr != null)
-                s.bind(new InetSocketAddress(new InetAddress.from_string(my_addr), 0), false);
+            this.s = s;
         }
 
-        /** When the method returns, use the returned object
-          *  to carry on the communication. Discard this instance, instead.
-          */
-        public IConnectedStreamSocket socket_connect(string addr, uint16 port) throws Error
+        public ConnectedStreamSocket.connect_network(string dest_addr, uint16 dest_tcp_port) throws Error
         {
-            assert(s != null);
-            PthThread.socket_connect(s, addr, port);
-            IConnectedStreamSocket ret = new ConnectedStreamSocket(s);
-            s = null;
-            return ret;
-        }
-    }
-
-    class ConnectedStreamSocket : Object, IConnectedStreamSocket
-    {
-        private Socket s;
-        private string remote_addr;
-        private uint16 remote_port;
-        private string local_addr;
-        private uint16 local_port;
-        public ConnectedStreamSocket(Socket soc) throws Error
-        {
-            s = soc;
-            InetSocketAddress x = (InetSocketAddress)s.get_remote_address();
-            remote_addr = x.address.to_string();
-            remote_port = (uint16)x.port;
-            InetSocketAddress y = (InetSocketAddress)s.get_local_address();
-            local_addr = y.address.to_string();
-            local_port = (uint16)y.port;
+            s = new Socket(SocketFamily.IPV4, SocketType.STREAM, SocketProtocol.DEFAULT);
+            SocketAddress addr = new InetSocketAddress(new InetAddress.from_string(dest_addr), dest_tcp_port);
+            PthThread.socket_connect(s, addr);
         }
 
-        public uint16 _peer_port_getter()
+        public ConnectedStreamSocket.connect_local(string send_pathname) throws Error
         {
-            return remote_port;
+            s = new Socket(SocketFamily.UNIX, SocketType.STREAM, SocketProtocol.DEFAULT);
+            SocketAddress addr = new UnixSocketAddress(send_pathname);
+            PthThread.socket_connect(s, addr);
         }
 
-        public unowned string _peer_address_getter()
+        public size_t send_part_new(uint8* b, size_t len) throws Error
         {
-            return remote_addr;
-        }
-
-        public uint16 _my_port_getter()
-        {
-            return local_port;
-        }
-
-        public unowned string _my_address_getter()
-        {
-            return local_addr;
-        }
-
-        protected int send_part(uchar[] data, int maxlen) throws Error
-        {
-            uchar[] buffer = new uchar[maxlen];
-            Posix.memcpy(buffer, data, maxlen);
-            int ret = (int)PthThread.socket_send(s, buffer);
-            return ret;
-        }
-
-        protected size_t send_part_new(uint8* b, size_t maxlen) throws Error
-        {
-            return PthThread.socket_send_new(s, b, maxlen);
-        }
-
-        public uchar[] recv(int maxlen) throws Error
-        {
-            uchar[] ret;
-            PthThread.socket_recv(s, out ret, maxlen);
-            return ret;
+            return PthThread.socket_send_new(s, b, len);
         }
 
         public size_t recv_new(uint8* b, size_t maxlen) throws Error
@@ -226,63 +118,39 @@ namespace PthTasklet
         }
     }
 
-    /** Use this class to implement a UDP datagram oriented service.
+    /** Use this class to listen to single broadcast datagrams on UDP bindtodevice or unix-domain.
       * The call to recvfrom blocks only the current tasklet, not the whole
       *  application.
-      * You can use this same object to send a response to the caller.
-      * Or else handle the request on another tasklet and, when necessary,
-      *  use an BroadcastClientDatagramSocket to send a reply.
       */
     internal class ServerDatagramSocket : Object
     {
         private Socket s;
+        private string listen_pathname;
 
-        public ServerDatagramSocket(uint16 port, string? bind_ip = null, string? dev = null) throws Error
+        public ServerDatagramSocket.network(uint16 udp_port, string my_dev) throws Error
         {
-            s = new Socket(SocketFamily.IPV4, SocketType.DATAGRAM, SocketProtocol.UDP);
-            if (dev != null)
-                sk_bindtodevice(s, dev);
-            if (bind_ip == null)
-                s.bind(new InetSocketAddress(new InetAddress.any(SocketFamily.IPV4), port), true);
-            else
-                s.bind(new InetSocketAddress(new InetAddress.from_string(bind_ip), port), true);
+            listen_pathname = null;
+            s = new Socket(SocketFamily.IPV4, SocketType.DATAGRAM, SocketProtocol.DEFAULT);
+            sk_bindtodevice(s, my_dev);
+            s.bind(new InetSocketAddress(new InetAddress.any(SocketFamily.IPV4), udp_port), true);
         }
 
-        public ServerDatagramSocket.ephemeral(out uint16 port, string? bind_ip = null, string? dev = null) throws Error
+        public ServerDatagramSocket.local(string listen_pathname) throws Error
         {
-            s = new Socket(SocketFamily.IPV4, SocketType.DATAGRAM, SocketProtocol.UDP);
-            if (dev != null)
-                sk_bindtodevice(s, dev);
-            if (bind_ip == null)
-                s.bind(new InetSocketAddress(new InetAddress.any(SocketFamily.IPV4), 0), true);
-            else
-                s.bind(new InetSocketAddress(new InetAddress.from_string(bind_ip), 0), true);
-            InetSocketAddress addr = (InetSocketAddress)s.get_local_address();
-            port = addr.get_port();
+            this.listen_pathname = listen_pathname;
+            s = new Socket(SocketFamily.UNIX, SocketType.DATAGRAM, SocketProtocol.DEFAULT);
+            s.bind(new UnixSocketAddress(listen_pathname), true);
         }
 
-        public uchar[] recvfrom(int maxsize, out string rmt_ip, out uint16 rmt_port) throws Error
+        public size_t recvfrom_new(uint8* b, size_t maxlen) throws Error
         {
-            uchar[] ret;
-            PthThread.socket_recvfrom(s, out ret, maxsize, out rmt_ip, out rmt_port);
-            return ret;
-        }
-
-        public size_t recvfrom_new(uint8* b, size_t maxlen, out string rmt_ip, out uint16 rmt_port) throws Error
-        {
-            size_t ret;
-            ret = PthThread.socket_recvfrom_new(s, b, maxlen, out rmt_ip, out rmt_port);
-            return ret;
-        }
-
-        public void sendto(uchar[] mesg, string rmt_ip, uint16 rmt_port) throws Error
-        {
-            PthThread.socket_sendto(s, mesg, rmt_ip, rmt_port);
+            return PthThread.socket_recvfrom_new(s, b, maxlen);
         }
 
         public void close() throws Error
         {
             s.close();
+            if (listen_pathname != null) FileUtils.unlink(listen_pathname);
         }
 
         ~ServerDatagramSocket()
@@ -291,43 +159,48 @@ namespace PthTasklet
         }
     }
 
-    /** Use this class to send a single UDP datagram in broadcast over
-      *  a particular interface.
+    /** Use this class to send a single broadcast datagram on UDP bindtodevice or unix-domain.
       */
-    internal class BroadcastClientDatagramSocket : Object
+    internal class ClientDatagramSocket : Object
     {
         private Socket s;
-        private uint16 port;
+        private uint16 udp_port;
+        private string send_pathname;
         public string dev {get; private set;}
 
-        public BroadcastClientDatagramSocket(string dev, uint16 port, string? bind_ip = null) throws Error
+        public ClientDatagramSocket.network(uint16 udp_port, string my_dev) throws Error
         {
-            this.port = port;
-            this.dev = dev;
-            s = new Socket(SocketFamily.IPV4, SocketType.DATAGRAM, SocketProtocol.UDP);
+            send_pathname = null;
+            this.udp_port = udp_port;
+            s = new Socket(SocketFamily.IPV4, SocketType.DATAGRAM, SocketProtocol.DEFAULT);
             sk_bindtodevice(s, dev);
-            if (bind_ip == null)
-                s.bind(new InetSocketAddress(new InetAddress.any(SocketFamily.IPV4), port), true);
-            else
-                s.bind(new InetSocketAddress(new InetAddress.from_string(bind_ip), port), true);
             sk_setbroadcast(s);
         }
 
-        public void send(uchar[] mesg) throws Error
+        public ClientDatagramSocket.local(string send_pathname) throws Error
         {
-            PthThread.socket_sendto(s, mesg, "255.255.255.255", port);
+            this.send_pathname = send_pathname;
+            s = new Socket(SocketFamily.UNIX, SocketType.DATAGRAM, SocketProtocol.DEFAULT);
         }
 
-        public size_t send_new(uint8* b, size_t len) throws Error
+        public size_t sendto_new(uint8* b, size_t len) throws Error
         {
-            size_t ret;
-            ret = PthThread.socket_sendto_new(s, b, len, "255.255.255.255", port);
-            return ret;
+            SocketAddress addr;
+            if (send_pathname != null)
+                addr = new UnixSocketAddress(send_pathname);
+            else
+                addr = new InetSocketAddress(new InetAddress.any(SocketFamily.IPV4), udp_port);
+            return PthThread.socket_sendto_new(s, addr, b, len);
         }
 
         public void close() throws Error
         {
             s.close();
+        }
+
+        ~ClientDatagramSocket()
+        {
+            close();
         }
     }
 
