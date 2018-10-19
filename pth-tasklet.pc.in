@@ -7,7 +7,7 @@ vapidir=${prefix}/share/vala/vapi
 Name: @PACKAGE_NAME@
 Description: GNU/Pth-based tasklet library - tasklet-system implementation
 Version: @VERSION@
-Requires.private: gee-0.8
+Requires.private: gee-0.8,gio-2.0,gio-unix-2.0
 Libs: -L${libdir} -lpth-tasklet
 Cflags: -I${includedir}
 
