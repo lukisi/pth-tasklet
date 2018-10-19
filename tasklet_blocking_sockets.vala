@@ -39,7 +39,7 @@ namespace PthTasklet
         {
             listen_pathname = null;
             s = new Socket(SocketFamily.IPV4, SocketType.STREAM, SocketProtocol.DEFAULT);
-            s.bind(new InetSocketAddress(new InetAddress.from_string(my_addr), port), true);
+            s.bind(new InetSocketAddress(new InetAddress.from_string(my_addr), my_tcp_port), true);
             s.set_listen_backlog(backlog);
             s.listen();
         }

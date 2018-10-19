@@ -26,6 +26,7 @@ libpth_tasklet_la_VALAFLAGS = \
 	--vapidir $(TASKLETSYSTEM_VAPIDIR) \
 	--pkg gee-0.8 \
 	--pkg gio-2.0 \
+	--pkg gio-unix-2.0 \
 	--pkg tasklet-system \
 	--pkg posix \
 	--pkg linux \
@@ -70,6 +71,7 @@ test_commands_VALAFLAGS = \
 	--vapidir $(TASKLETSYSTEM_VAPIDIR) \
 	--pkg glib-2.0 \
 	--pkg gio-2.0 \
+	--pkg gio-unix-2.0 \
 	--pkg gee-0.8 \
 	--pkg posix \
 	--pkg tasklet-system \

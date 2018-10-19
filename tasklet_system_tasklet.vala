@@ -86,54 +86,6 @@ namespace PthTaskletImplementer
             return h;
         }
 
-        public TaskletCommandResult exec_command_argv(Gee.List<string> argv) throws Error
-        {
-            TaskletCommandResult ret = new TaskletCommandResult();
-            PthTasklet.CommandResult res = PthTasklet.Tasklet.exec_command(argv);
-            ret.exit_status = res.exit_status;
-            ret.stdout = res.cmdout;
-            ret.stderr = res.cmderr;
-            return ret;
-        }
-
-        public size_t read(int fd, void* b, size_t maxlen) throws Error
-        {
-            return PthTasklet.Tasklet.read(fd, b, maxlen);
-        }
-
-        public size_t write(int fd, void* b, size_t count) throws Error
-        {
-            return PthTasklet.Tasklet.write(fd, b, count);
-        }
-
-        public IServerStreamSocket get_server_stream_socket(uint16 port, string? my_addr=null) throws Error
-        {
-            PthTasklet.ServerStreamSocket s = new PthTasklet.ServerStreamSocket(port, 5, my_addr);
-            return new MyServerStreamSocket(s);
-        }
-
-        public IConnectedStreamSocket get_client_stream_socket(string dest_addr, uint16 dest_port, string? my_addr=null) throws Error
-        {
-            PthTasklet.ClientStreamSocket s = new PthTasklet.ClientStreamSocket(my_addr);
-            return new MyConnectedStreamSocket(s.socket_connect(dest_addr, dest_port));
-        }
-
-        public IServerDatagramSocket get_server_datagram_socket(uint16 port, string dev) throws Error
-        {
-            PthTasklet.ServerDatagramSocket s = new PthTasklet.ServerDatagramSocket(port, null, dev);
-            return new MyServerDatagramSocket(s);
-        }
-
-        public IClientDatagramSocket get_client_datagram_socket(uint16 port, string dev, string? my_addr=null) throws Error
-        {
-            return new MyClientDatagramSocket(new PthTasklet.BroadcastClientDatagramSocket(dev, port, my_addr));
-        }
-
-        public IChannel get_channel()
-        {
-            return new MyChannel();
-        }
-
         private class MyHandle : Object, ITaskletHandle
         {
             public int ind;
@@ -163,88 +115,19 @@ namespace PthTaskletImplementer
             }
         }
 
-        private class MyServerStreamSocket : Object, IServerStreamSocket
+        public TaskletCommandResult exec_command_argv(Gee.List<string> argv) throws Error
         {
-            private PthTasklet.ServerStreamSocket c;
-            public MyServerStreamSocket(PthTasklet.ServerStreamSocket c)
-            {
-                this.c = c;
-            }
-
-            public IConnectedStreamSocket accept() throws Error
-            {
-                return new MyConnectedStreamSocket(c.accept());
-            }
-
-            public void close() throws Error
-            {
-                c.close();
-            }
+            TaskletCommandResult ret = new TaskletCommandResult();
+            PthTasklet.CommandResult res = PthTasklet.Tasklet.exec_command(argv);
+            ret.exit_status = res.exit_status;
+            ret.stdout = res.cmdout;
+            ret.stderr = res.cmderr;
+            return ret;
         }
 
-        private class MyConnectedStreamSocket : Object, IConnectedStreamSocket
+        public IChannel get_channel()
         {
-            private PthTasklet.IConnectedStreamSocket c;
-            public MyConnectedStreamSocket(PthTasklet.IConnectedStreamSocket c)
-            {
-                this.c = c;
-            }
-
-            public unowned string _peer_address_getter() {return c.peer_address;}
-            public unowned string _my_address_getter() {return c.my_address;}
-
-            public size_t recv(uint8* b, size_t maxlen) throws Error
-            {
-                return c.recv_new(b, maxlen);
-            }
-
-            public void send(uint8* b, size_t len) throws Error
-            {
-                c.send_new(b, len);
-            }
-
-            public void close() throws Error
-            {
-                c.close();
-            }
-        }
-
-        private class MyServerDatagramSocket : Object, IServerDatagramSocket
-        {
-            private PthTasklet.ServerDatagramSocket c;
-            public MyServerDatagramSocket(PthTasklet.ServerDatagramSocket c)
-            {
-                this.c = c;
-            }
-
-            public size_t recvfrom(uint8* b, size_t maxlen, out string rmt_ip, out uint16 rmt_port) throws Error
-            {
-                return c.recvfrom_new(b, maxlen, out rmt_ip, out rmt_port);
-            }
-
-            public void close() throws Error
-            {
-                c.close();
-            }
-        }
-
-        private class MyClientDatagramSocket : Object, IClientDatagramSocket
-        {
-            private PthTasklet.BroadcastClientDatagramSocket c;
-            public MyClientDatagramSocket(PthTasklet.BroadcastClientDatagramSocket c)
-            {
-                this.c = c;
-            }
-
-            public size_t sendto(uint8* b, size_t len) throws Error
-            {
-                return c.send_new(b, len);
-            }
-
-            public void close() throws Error
-            {
-                c.close();
-            }
+            return new MyChannel();
         }
 
         private class MyChannel : Object, IChannel
@@ -282,6 +165,148 @@ namespace PthTaskletImplementer
                 } catch (PthTasklet.ChannelError e) {
                     throw new ChannelError.TIMEOUT(e.message);
                 }
+            }
+        }
+
+        public size_t read(int fd, void* b, size_t maxlen) throws Error
+        {
+            return PthTasklet.Tasklet.read(fd, b, maxlen);
+        }
+
+        public size_t write(int fd, void* b, size_t count) throws Error
+        {
+            return PthTasklet.Tasklet.write(fd, b, count);
+        }
+
+
+        public IServerStreamNetworkSocket get_server_stream_network_socket(string my_addr, uint16 my_tcp_port) throws Error
+        {
+            return new NewServerStreamSocket(new PthTasklet.ServerStreamSocket.network(my_addr, my_tcp_port));
+        }
+
+        public IConnectedStreamNetworkSocket get_client_stream_network_socket(string dest_addr, uint16 dest_tcp_port) throws Error
+        {
+            return new NewConnectedStreamSocket(new PthTasklet.ConnectedStreamSocket.connect_network(dest_addr, dest_tcp_port));
+        }
+
+        public IServerDatagramNetworkSocket get_server_datagram_network_socket(uint16 udp_port, string my_dev) throws Error
+        {
+            return new NewServerDatagramSocket(new PthTasklet.ServerDatagramSocket.network(udp_port, my_dev));
+        }
+
+        public IClientDatagramNetworkSocket get_client_datagram_network_socket(uint16 udp_port, string my_dev) throws Error
+        {
+            return new NewClientDatagramSocket(new PthTasklet.ClientDatagramSocket.network(udp_port, my_dev));
+        }
+
+
+        public IServerStreamLocalSocket get_server_stream_local_socket(string listen_pathname) throws Error
+        {
+            return new NewServerStreamSocket(new PthTasklet.ServerStreamSocket.local(listen_pathname));
+        }
+
+        public IConnectedStreamLocalSocket get_client_stream_local_socket(string send_pathname) throws Error
+        {
+            return new NewConnectedStreamSocket(new PthTasklet.ConnectedStreamSocket.connect_local(send_pathname));
+        }
+
+        public IServerDatagramLocalSocket get_server_datagram_local_socket(string listen_pathname) throws Error
+        {
+            return new NewServerDatagramSocket(new PthTasklet.ServerDatagramSocket.local(listen_pathname));
+        }
+
+        public IClientDatagramLocalSocket get_client_datagram_local_socket(string send_pathname) throws Error
+        {
+            return new NewClientDatagramSocket(new PthTasklet.ClientDatagramSocket.local(send_pathname));
+        }
+
+
+        private class NewServerStreamSocket : Object,
+                IServerStreamNetworkSocket, IServerStreamLocalSocket, IServerStreamSocket
+        {
+            private PthTasklet.ServerStreamSocket s;
+
+            public NewServerStreamSocket(PthTasklet.ServerStreamSocket s)
+            {
+                this.s = s;
+            }
+
+            public IConnectedStreamSocket accept() throws Error
+            {
+                return new NewConnectedStreamSocket(s.accept());
+            }
+
+            public void close() throws Error
+            {
+                s.close();
+            }
+        }
+
+        private class NewConnectedStreamSocket : Object,
+                IConnectedStreamNetworkSocket, IConnectedStreamLocalSocket, IConnectedStreamSocket
+        {
+            private PthTasklet.ConnectedStreamSocket s;
+
+            public NewConnectedStreamSocket(PthTasklet.ConnectedStreamSocket s)
+            {
+                this.s = s;
+            }
+
+            public size_t recv(uint8* b, size_t maxlen) throws Error
+            {
+                return s.recv_new(b, maxlen);
+            }
+
+            public size_t send_part(uint8* b, size_t len) throws Error
+            {
+                return s.send_part_new(b, len);
+            }
+
+            public void close() throws Error
+            {
+                s.close();
+            }
+        }
+
+        private class NewServerDatagramSocket : Object,
+                IServerDatagramNetworkSocket, IServerDatagramLocalSocket, IServerDatagramSocket
+        {
+            private PthTasklet.ServerDatagramSocket s;
+
+            public NewServerDatagramSocket(PthTasklet.ServerDatagramSocket s)
+            {
+                this.s = s;
+            }
+
+            public size_t recvfrom(uint8* b, size_t maxlen) throws Error
+            {
+                return s.recvfrom_new(b, maxlen);
+            }
+
+            public void close() throws Error
+            {
+                s.close();
+            }
+        }
+
+        private class NewClientDatagramSocket : Object,
+                IClientDatagramNetworkSocket, IClientDatagramLocalSocket, IClientDatagramSocket
+        {
+            private PthTasklet.ClientDatagramSocket s;
+
+            public NewClientDatagramSocket(PthTasklet.ClientDatagramSocket s)
+            {
+                this.s = s;
+            }
+
+            public size_t sendto(uint8* b, size_t len) throws Error
+            {
+                return s.sendto_new(b, len);
+            }
+
+            public void close() throws Error
+            {
+                s.close();
             }
         }
     }

@@ -18,7 +18,7 @@ AM_PROG_VALAC([0.24])
 AM_MAINTAINER_MODE([enable])
 
 PKG_CHECK_MODULES([GOBJECT], [gobject-2.0 glib-2.0])
-PKG_CHECK_MODULES([GIO], [gio-2.0])
+PKG_CHECK_MODULES([GIO], [gio-2.0 gio-unix-2.0])
 PKG_CHECK_VAR([GIO_PREFIX], [gio-2.0], [prefix])
 PKG_CHECK_MODULES([GEE], [gee-0.8])
 PKG_CHECK_VAR([GEE_PREFIX], [gee-0.8], [prefix])
