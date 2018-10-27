@@ -222,7 +222,7 @@ namespace PthTaskletImplementer
 
 
         private class NewServerStreamSocket : Object,
-                IServerStreamNetworkSocket, IServerStreamLocalSocket, IServerStreamSocket
+                IServerStreamSocket, IServerStreamNetworkSocket, IServerStreamLocalSocket
         {
             private PthTasklet.ServerStreamSocket s;
 
@@ -243,7 +243,7 @@ namespace PthTaskletImplementer
         }
 
         private class NewConnectedStreamSocket : Object,
-                IConnectedStreamNetworkSocket, IConnectedStreamLocalSocket, IConnectedStreamSocket
+                IConnectedStreamSocket, IConnectedStreamNetworkSocket, IConnectedStreamLocalSocket
         {
             private PthTasklet.ConnectedStreamSocket s;
 
@@ -269,7 +269,7 @@ namespace PthTaskletImplementer
         }
 
         private class NewServerDatagramSocket : Object,
-                IServerDatagramNetworkSocket, IServerDatagramLocalSocket, IServerDatagramSocket
+                IServerDatagramSocket, IServerDatagramNetworkSocket, IServerDatagramLocalSocket
         {
             private PthTasklet.ServerDatagramSocket s;
 
@@ -290,7 +290,7 @@ namespace PthTaskletImplementer
         }
 
         private class NewClientDatagramSocket : Object,
-                IClientDatagramNetworkSocket, IClientDatagramLocalSocket, IClientDatagramSocket
+                IClientDatagramSocket, IClientDatagramNetworkSocket, IClientDatagramLocalSocket
         {
             private PthTasklet.ClientDatagramSocket s;
 
