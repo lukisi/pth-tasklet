@@ -34,21 +34,26 @@ namespace PthTasklet
     {
         private Socket s;
         private string listen_pathname;
+        private bool bind_done;
 
         public ServerStreamSocket.network(string my_addr, uint16 my_tcp_port, int backlog = 5) throws Error
         {
+            bind_done = false;
             listen_pathname = null;
             s = new Socket(SocketFamily.IPV4, SocketType.STREAM, SocketProtocol.DEFAULT);
             s.bind(new InetSocketAddress(new InetAddress.from_string(my_addr), my_tcp_port), true);
+            bind_done = true;
             s.set_listen_backlog(backlog);
             s.listen();
         }
 
         public ServerStreamSocket.local(string listen_pathname, int backlog = 5) throws Error
         {
+            bind_done = false;
             this.listen_pathname = listen_pathname;
             s = new Socket(SocketFamily.UNIX, SocketType.STREAM, SocketProtocol.DEFAULT);
             s.bind(new UnixSocketAddress(listen_pathname), true);
+            bind_done = true;
             s.set_listen_backlog(backlog);
             s.listen();
         }
@@ -71,7 +76,7 @@ namespace PthTasklet
 
         ~ServerStreamSocket()
         {
-            close();
+            if (bind_done) close();
         }
     }
 
@@ -126,20 +131,25 @@ namespace PthTasklet
     {
         private Socket s;
         private string listen_pathname;
+        private bool bind_done;
 
         public ServerDatagramSocket.network(uint16 udp_port, string my_dev) throws Error
         {
+            bind_done = false;
             listen_pathname = null;
             s = new Socket(SocketFamily.IPV4, SocketType.DATAGRAM, SocketProtocol.DEFAULT);
             sk_bindtodevice(s, my_dev);
             s.bind(new InetSocketAddress(new InetAddress.any(SocketFamily.IPV4), udp_port), true);
+            bind_done = true;
         }
 
         public ServerDatagramSocket.local(string listen_pathname) throws Error
         {
+            bind_done = false;
             this.listen_pathname = listen_pathname;
             s = new Socket(SocketFamily.UNIX, SocketType.DATAGRAM, SocketProtocol.DEFAULT);
             s.bind(new UnixSocketAddress(listen_pathname), true);
+            bind_done = true;
         }
 
         public size_t recvfrom_new(uint8* b, size_t maxlen) throws Error
@@ -155,7 +165,7 @@ namespace PthTasklet
 
         ~ServerDatagramSocket()
         {
-            close();
+            if (bind_done) close();
         }
     }
 
